@@ -97,6 +97,40 @@ const Contact = () => {
                         </form>
                     </div>
                 </div>
+
+                {/* Map Section */}
+                <div className="mt-20">
+                    <div className="bg-surface rounded-3xl overflow-hidden shadow-xl border border-slate-100 p-2">
+                        <div className="relative h-[450px] w-full rounded-2xl overflow-hidden group">
+                            <iframe
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3886.8431791678345!2d80.0917911!3d13.0456522!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a528b9a1b2cf29b%3A0x97f1cec8db27adb4!2sTravel%20Episodes!5e0!3m2!1sen!2sin!4v1769772460834!5m2!1sen!2sin"
+                                width="100%"
+                                height="100%"
+                                style={{ border: 0 }}
+                                allowFullScreen=""
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                title="Travel Episodes Location"
+                                className="w-full h-full"
+                            ></iframe>
+
+                            <div className="absolute bottom-6 right-6">
+                                <a
+                                    href="https://www.google.com/maps/place/Travel+Episodes/@13.0456522,80.0917911,17z/data=!3m1!4b1!4m6!3m5!1s0x3a528b9a1b2cf29b:0x97f1cec8db27adb4!8m2!3d13.0456522!4d80.0917911!16s%2Fg%2F11tdj9kr2w"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-primary shadow-2xl flex items-center justify-center gap-3 px-8 py-4 w-full md:w-auto"
+                                >
+                                    <img src="/google-logo.png" alt="Google" className="w-5 h-5 object-contain" />
+                                    Open in Google Maps
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-8 text-center">
+                        <p className="text-slate-500 font-medium">Located in Poonamallee, Chennai – Visit us for a personal consultation!</p>
+                    </div>
+                </div>
             </div>
         </div>
     );
