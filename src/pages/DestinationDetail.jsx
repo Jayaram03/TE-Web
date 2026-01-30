@@ -29,7 +29,7 @@ const DestinationDetail = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background pb-20 overflow-x-hidden">
+        <div className="min-h-screen bg-background pb-10 md:pb-20 overflow-x-hidden">
             {/* Hero Header */}
             <div className="relative h-[60vh] md:h-[70vh] w-full overflow-hidden">
                 <motion.div
@@ -46,7 +46,7 @@ const DestinationDetail = () => {
 
                 <motion.div
                     style={{ opacity }}
-                    className="absolute inset-0 flex flex-col items-center justify-center text-center px-4"
+                    className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pt-12 md:pt-0"
                 >
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -86,41 +86,41 @@ const DestinationDetail = () => {
             <div className="container -mt-32 relative z-20">
                 <div className="bg-white rounded-[2rem] shadow-2xl p-6 md:p-12 border border-slate-100/50">
                     {/* Glassmorphic Quick Info Bar */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 pb-12 mb-12 border-b border-slate-100">
-                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-4">
-                            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
-                                <Clock className="w-6 h-6 text-primary" />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-8 pb-12 mb-12 border-b border-slate-100">
+                        <div className="p-3 md:p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3 md:gap-4">
+                            <div className="w-9 h-9 md:w-12 md:h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                                <Clock className="w-4 h-4 md:w-6 md:h-6 text-primary" />
                             </div>
-                            <div>
-                                <p className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Duration</p>
-                                <p className="font-bold text-slate-800">{destination.duration}</p>
-                            </div>
-                        </div>
-                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-4">
-                            <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center shrink-0">
-                                <Calendar className="w-6 h-6 text-secondary" />
-                            </div>
-                            <div>
-                                <p className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Best Time</p>
-                                <p className="font-bold text-slate-800">{destination.bestTime || 'Year Round'}</p>
+                            <div className="min-w-0">
+                                <p className="text-slate-400 text-[8px] md:text-[10px] uppercase font-bold tracking-wider">Duration</p>
+                                <p className="font-bold text-xs md:text-base text-slate-800 truncate">{destination.duration}</p>
                             </div>
                         </div>
-                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-4">
-                            <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center shrink-0">
-                                <Wallet className="w-6 h-6 text-green-600" />
+                        <div className="p-3 md:p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3 md:gap-4">
+                            <div className="w-9 h-9 md:w-12 md:h-12 bg-secondary/10 rounded-xl flex items-center justify-center shrink-0">
+                                <Calendar className="w-4 h-4 md:w-6 md:h-6 text-secondary" />
                             </div>
-                            <div>
-                                <p className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Starting</p>
-                                <p className="font-bold text-slate-800">{destination.price}</p>
+                            <div className="min-w-0">
+                                <p className="text-slate-400 text-[8px] md:text-[10px] uppercase font-bold tracking-wider">Best Time</p>
+                                <p className="font-bold text-xs md:text-base text-slate-800 truncate">{destination.bestTime || 'Year Round'}</p>
                             </div>
                         </div>
-                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-4">
-                            <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center shrink-0">
-                                <ShieldCheck className="w-6 h-6 text-orange-600" />
+                        <div className="p-3 md:p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3 md:gap-4">
+                            <div className="w-9 h-9 md:w-12 md:h-12 bg-green-500/10 rounded-xl flex items-center justify-center shrink-0">
+                                <Wallet className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
                             </div>
-                            <div>
-                                <p className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Verified</p>
-                                <p className="font-bold text-slate-800">TE Certified</p>
+                            <div className="min-w-0">
+                                <p className="text-slate-400 text-[8px] md:text-[10px] uppercase font-bold tracking-wider">Starting</p>
+                                <p className="font-bold text-xs md:text-base text-slate-800 truncate">{destination.price}</p>
+                            </div>
+                        </div>
+                        <div className="p-3 md:p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3 md:gap-4">
+                            <div className="w-9 h-9 md:w-12 md:h-12 bg-orange-500/10 rounded-xl flex items-center justify-center shrink-0">
+                                <ShieldCheck className="w-4 h-4 md:w-6 md:h-6 text-orange-600" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-slate-400 text-[8px] md:text-[10px] uppercase font-bold tracking-wider">Verified</p>
+                                <p className="font-bold text-xs md:text-base text-slate-800 truncate">TE Certified</p>
                             </div>
                         </div>
                     </div>

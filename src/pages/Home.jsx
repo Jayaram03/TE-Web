@@ -202,10 +202,9 @@ const Home = () => {
                         {trendingDestinations.map((dest) => (
                             <motion.div
                                 key={dest.id}
-                                whileHover={{ y: -20, scale: 1.05 }}
-                                className="w-[260px] md:w-[420px] shrink-0 h-[380px] md:h-[500px] perspective-1000"
+                                className="w-[260px] md:w-[420px] shrink-0 h-[380px] md:h-[500px]"
                             >
-                                <div className="w-full h-full shadow-2xl shadow-black/50 rounded-3xl overflow-hidden hover:ring-2 hover:ring-orange-500/50 transition-all duration-500">
+                                <div className="w-full h-full shadow-xl shadow-black/20 rounded-3xl overflow-hidden hover:ring-2 hover:ring-orange-500/50 transition-all duration-300 transform-gpu">
                                     <DestinationCard destination={dest} />
                                 </div>
                             </motion.div>
@@ -214,10 +213,9 @@ const Home = () => {
                         {trendingDestinations.map((dest) => (
                             <motion.div
                                 key={`${dest.id}-duplicate`}
-                                whileHover={{ y: -20, scale: 1.05 }}
-                                className="w-[260px] md:w-[420px] shrink-0 h-[380px] md:h-[500px] perspective-1000"
+                                className="w-[260px] md:w-[420px] shrink-0 h-[380px] md:h-[500px]"
                             >
-                                <div className="w-full h-full shadow-2xl shadow-black/50 rounded-3xl overflow-hidden hover:ring-2 hover:ring-orange-500/50 transition-all duration-500">
+                                <div className="w-full h-full shadow-xl shadow-black/20 rounded-3xl overflow-hidden hover:ring-2 hover:ring-orange-500/50 transition-all duration-300 transform-gpu">
                                     <DestinationCard destination={dest} />
                                 </div>
                             </motion.div>
@@ -337,9 +335,11 @@ const BentoCard = ({ review, index }) => {
                 </div>
                 <img src="/google-logo.png" alt="Google" className="w-5 h-5 object-contain" />
             </div>
-            <p className="text-slate-600 text-sm leading-relaxed line-clamp-4 group-hover:line-clamp-none transition-all duration-500">
-                "{review.text}"
-            </p>
+            <div className="h-24 overflow-hidden relative group-hover:h-auto transition-all duration-500">
+                <p className="text-slate-600 text-sm leading-relaxed line-clamp-4 group-hover:line-clamp-none">
+                    "{review.text}"
+                </p>
+            </div>
         </div>
     );
 };

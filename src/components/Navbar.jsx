@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,8 +27,8 @@ const Navbar = () => {
     { name: 'Contact Us', path: '/contact' },
   ];
 
-  // Dynamic Classes
-  const navContainerClasses = `fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isTransparent
+  // Dynamic Classes - Increased Z-Index to stay above everything
+  const navContainerClasses = `fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${isTransparent
     ? 'bg-transparent py-5'
     : 'bg-surface/95 backdrop-blur-md shadow-sm py-3 border-b border-orange-100'
     }`;
@@ -47,10 +48,6 @@ const Navbar = () => {
   const mobileToggleColor = isTransparent ? 'text-white' : 'text-slate-900';
 
   // Logo: Apply mix-blend-multiply ONLY when on white background to remove white box from logo if present.
-  // When transparent (dark background usually), keep it normal or invert if needed (assuming logo is colored or has white bg).
-  // If logo has white bg, mix-blend-multiply on white header makes it look transparent.
-  // On dark transparent header, we can't easily remove white bg without seeing a box unless we use specific CSS hack or logo is PNG transparent.
-  // Assuming user wants "remove whitespace background", mix-blend-multiply works best on light backgrounds.
   const logoClasses = `h-24 md:h-32 w-auto object-contain transition-all duration-300 ${!isTransparent ? 'mix-blend-multiply' : ''
     }`;
 
@@ -89,29 +86,39 @@ const Navbar = () => {
           {isOpen ? <X className={mobileToggleColor} /> : <Menu className={mobileToggleColor} />}
         </button>
 
-        {/* Mobile Menu */}
-        {isOpen && (
-          <div className="absolute top-full left-0 right-0 bg-surface border-t border-orange-100 shadow-lg p-6 md:hidden flex flex-col gap-4 animate-fade-in">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`text-lg font-medium ${location.pathname === link.path ? 'text-primary' : 'text-slate-600'
-                  }`}
-                onClick={() => setIsOpen(false)}
-              >
-                {link.name}
-              </Link>
-            ))}
-            <Link
-              to="/enquiry"
-              className="btn btn-primary w-full"
-              onClick={() => setIsOpen(false)}
+        {/* Mobile Menu with AnimatePresence */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="absolute top-full left-0 right-0 bg-surface border-t border-orange-100 shadow-lg px-6 overflow-hidden md:hidden flex flex-col"
             >
-              Plan My Trip
-            </Link>
-          </div>
-        )}
+              <div className="py-6 flex flex-col gap-4">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={`text-lg font-medium ${location.pathname === link.path ? 'text-primary' : 'text-slate-600'
+                      }`}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+                <Link
+                  to="/enquiry"
+                  className="btn btn-primary w-full"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Plan My Trip
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   );
