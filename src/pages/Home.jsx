@@ -46,7 +46,7 @@ const Home = () => {
     return (
         <div className="min-h-screen bg-background overflow-x-hidden">
             {/* Hero Section - Optimized Trendy Overhaul */}
-            <section ref={heroRef} className="relative min-h-[100dvh] flex items-center justify-center text-white overflow-hidden bg-slate-950">
+            <section ref={heroRef} className="relative h-[100svh] flex items-center justify-center text-white overflow-hidden bg-slate-950">
                 {/* Parallax Background Layers with GPU Acceleration */}
                 <motion.div
                     style={{ y: y1, scale }}

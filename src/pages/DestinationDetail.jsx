@@ -31,7 +31,7 @@ const DestinationDetail = () => {
     return (
         <div className="min-h-screen bg-background pb-10 md:pb-20 overflow-x-hidden">
             {/* Hero Header */}
-            <div className="relative h-[60vh] md:h-[70vh] w-full overflow-hidden">
+            <div className="relative h-[60svh] md:h-[70vh] w-full overflow-hidden">
                 <motion.div
                     style={{ y: y1, scale }}
                     className="absolute inset-0 w-full h-full"
