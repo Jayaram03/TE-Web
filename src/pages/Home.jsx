@@ -102,13 +102,6 @@ const Home = () => {
 
             <AdventureCTA />
 
-            <style>{`
-                .perspective-1000 { perspective: 1000px; }
-                @keyframes kenburns {
-                    0% { transform: scale(1); }
-                    100% { transform: scale(1.1); }
-                }
-            `}</style>
         </div>
     );
 };
