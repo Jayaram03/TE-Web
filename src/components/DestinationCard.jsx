@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, MapPin, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const DestinationCard = ({ destination }) => {
+    const [loaded, setLoaded] = useState(false);
+
     return (
         <motion.div
             layout
@@ -13,17 +15,26 @@ const DestinationCard = ({ destination }) => {
             transition={{ duration: 0.3 }}
             className="h-full"
         >
-            <Link to={`/destinations/${destination.id}`} className="card group block h-full flex flex-col hover:-translate-y-2 transition-transform duration-300">
+            <Link to={`/destinations/${destination.id}`} className="card group h-full flex flex-col hover:-translate-y-2 transition-transform duration-300">
                 <div className="relative overflow-hidden h-48 md:h-56 shrink-0 bg-slate-200">
+                    {/* Shimmer skeleton shown until the image has finished loading */}
+                    {!loaded && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%] animate-shimmer" />
+                    )}
                     <img
                         src={destination.image}
                         alt={destination.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        width={420}
+                        height={280}
+                        className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
                         loading="lazy"
+                        decoding="async"
+                        onLoad={() => setLoaded(true)}
                         onError={(e) => {
                             e.target.style.display = 'none'; // Hide the broken image icon
                             e.target.parentElement.classList.remove('bg-slate-200'); // Remove the placeholder gray
                             e.target.parentElement.classList.add('bg-slate-800'); // Dark background for fallback
+                            setLoaded(true);
                         }}
                     />
                     {/* Gradient Overlay - Always present to ensure text readability */}
@@ -35,7 +46,7 @@ const DestinationCard = ({ destination }) => {
                     </div>
 
                     {/* Name & Tagline */}
-                    <div className="absolute bottom-4 left-4 p-2 z-10 w-full pr-4">
+                    <div className="absolute bottom-4 inset-x-4 z-10">
                         <h2 className="text-xl md:text-2xl font-bold mb-1 leading-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                             {destination.name}
                         </h2>
@@ -46,7 +57,7 @@ const DestinationCard = ({ destination }) => {
                 </div>
                 <div className="p-4 md:p-5 flex flex-col flex-grow bg-white">
                     <div className="flex flex-wrap items-center justify-between gap-y-3 text-sm text-slate-500 mb-4 pb-4 border-b border-slate-100">
-                        <div className="flex items-center gap-2 md:gap-3">
+                        <div className="flex flex-wrap items-center gap-2 md:gap-3 min-w-0">
                             <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md">
                                 <Clock className="w-3.5 h-3.5 text-orange-400" />
                                 <span className="font-bold text-[10px] md:text-[11px] uppercase tracking-tight">{destination.duration}</span>

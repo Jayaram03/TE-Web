@@ -1,103 +1,68 @@
-import React, { useMemo } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plane, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { ArrowUpRight, Instagram, Mail, MapPin, MessageCircle, Phone, Plane } from 'lucide-react';
+import LandmarkSkyline from './LandmarkSkyline';
+import NightSky from './NightSky';
+import ScrollReveal from './ScrollReveal';
 
 const Footer = () => {
-    const whatsappNumber = useMemo(() => {
+    const [whatsappNumber] = useState(() => {
         const numbers = ['919841844977', '918939718676', '919551933805'];
         return numbers[Math.floor(Math.random() * numbers.length)];
-    }, []);
+    });
 
     return (
-        <footer className="bg-slate-900 text-slate-300 pt-20 pb-10">
-            <div className="container">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-                    {/* Brand & Socials */}
-                    <div className="space-y-6">
-                        <Link to="/" className="flex items-center gap-2">
-                            <img src="/logo.png" alt="Travel Episodes" className="h-28 w-auto" />
+        <footer className="bg-slate-950 text-slate-300 relative overflow-x-clip">
+            <div className="relative isolate overflow-hidden bg-linear-to-b from-slate-900 via-indigo-950/30 to-slate-950 pt-14 md:pt-24">
+                <NightSky />
+                <div className="container relative z-10">
+                    <div className="flex items-center justify-between gap-4 text-[10px] md:text-xs uppercase tracking-[0.2em] text-orange-300 mb-7"><span className="inline-flex items-center gap-2"><Plane className="h-4 w-4" /> The departure lounge</span><span className="hidden sm:block">Next stop: your next chapter</span></div>
+                    <ScrollReveal tilt={-2}>
+                        <Link to="/enquiry" className="group block border-y border-white/15 py-8 md:py-12 focus-visible:outline-2 focus-visible:outline-orange-300">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5"><p className="text-[clamp(42px,8vw,112px)] font-black text-white leading-[0.95] tracking-[-0.05em]">See you<br /><span className="text-orange-300">somewhere new.</span></p><span className="shrink-0 flex items-center justify-center h-14 w-14 md:h-24 md:w-24 rounded-full border border-white/30 group-hover:bg-orange-300 group-hover:text-slate-950 transition-colors"><ArrowUpRight className="h-7 w-7 md:h-12 md:w-12" /></span></div>
+                            <p className="mt-6 text-sm md:text-base text-slate-400 flex items-center gap-3">Your ideas. Our expertise. One unforgettable trip.<span className="hidden md:inline text-orange-300 font-bold">Let’s plan it →</span></p>
                         </Link>
-                        <p className="text-slate-400 leading-relaxed text-sm">
-                            Crafting unforgettable journeys. Experience the beauty of the world with Travel Episodes.
-                        </p>
-                        <div className="flex gap-4">
-                            <a href="https://www.instagram.com/travel_episodes_/?hl=en" target="_blank" rel="noopener noreferrer" className="bg-slate-800 p-2.5 rounded-full hover:bg-primary hover:text-white transition-all transform hover:-translate-y-1" title="Follow us on Instagram">
-                                <Instagram className="w-4 h-4" />
-                            </a>
-                            <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="bg-slate-800 p-2.5 rounded-full hover:bg-green-500 hover:text-white transition-all transform hover:-translate-y-1" title="Chat with an Agent on WhatsApp">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
-                            </a>
-                            <a href="mailto:travelepisodeschennai@gmail.com" className="bg-slate-800 p-2.5 rounded-full hover:bg-red-500 hover:text-white transition-all transform hover:-translate-y-1" title="Send us an Email">
-                                <Mail className="w-4 h-4" />
-                            </a>
+                    </ScrollReveal>
+                    <div className="mt-8 md:mt-12 grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8 md:gap-12 pb-8">
+                        <div>
+                            <Link to="/" aria-label="Travel Episodes home" className="inline-flex rounded-2xl bg-white p-3 mb-5 hover:-rotate-2 transition-transform focus-visible:outline-2 focus-visible:outline-orange-300"><img src="/logo.png" alt="Travel Episodes" width="176" height="80" loading="lazy" className="h-16 md:h-20 w-auto max-w-44 object-contain" /></Link>
+                            <div className="flex items-center gap-3 mb-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-orange-300"><span>Chennai roots</span><span className="flex items-center gap-1.5 text-white/30" aria-hidden="true"><span className="w-5 border-t border-dashed border-current" /><Plane className="h-3.5 w-3.5 -rotate-12" /><span className="w-5 border-t border-dashed border-current" /></span><span>Limitless horizons</span></div>
+                            <p className="text-sm leading-relaxed text-slate-400 max-w-sm mb-5">Trips worth taking. Stories worth keeping. A real travel crew to make it all happen.</p>
+                            <div className="flex gap-2">
+                                {[
+                                    { label: 'Instagram', href: 'https://www.instagram.com/travel_episodes_/?hl=en', icon: Instagram, external: true },
+                                    { label: 'WhatsApp', href: `https://wa.me/${whatsappNumber}`, icon: MessageCircle, external: true },
+                                    { label: 'Email', href: 'mailto:travelepisodeschennai@gmail.com', icon: Mail },
+                                ].map(social => <a key={social.label} href={social.href} aria-label={social.label} target={social.external ? '_blank' : undefined} rel={social.external ? 'noopener noreferrer' : undefined} className="h-11 w-11 flex items-center justify-center rounded-full border border-white/15 hover:border-orange-300 hover:text-orange-300 transition-colors"><social.icon className="h-4 w-4" /></a>)}
+                            </div>
+                            <address aria-label="Call our travel team" className="not-italic mt-5 grid gap-2 max-w-xs">
+                                {[
+                                    ['+919841844977', '+91 98418 44977'],
+                                    ['+918939718676', '+91 89397 18676'],
+                                    ['+919551933805', '+91 95519 33805'],
+                                ].map(([number, label]) => <a key={number} href={`tel:${number}`} className="group flex min-h-11 items-center gap-3 rounded-xl border border-white/10 px-3 py-2 text-sm leading-6 tabular-nums text-slate-300 hover:border-orange-300/40 hover:text-orange-300 transition-colors focus-visible:outline-2 focus-visible:outline-orange-300"><Phone className="h-4 w-4 shrink-0 text-orange-300" aria-hidden="true" /><span>{label}</span><ArrowUpRight className="ml-auto h-3.5 w-3.5 text-slate-500 group-hover:text-orange-300" aria-hidden="true" /></a>)}
+                            </address>
+                        </div>
+                        <div>
+                            <nav aria-label="Footer navigation" className="grid grid-cols-2 gap-x-6">
+                                {[
+                                    { name: 'Find your escape', path: '/destinations' },
+                                    { name: 'Make it personal', path: '/enquiry' },
+                                    { name: 'Our home', path: '/' },
+                                    { name: 'Say hello', path: '/contact' },
+                                ].map((link, index) => <Link key={link.path} to={link.path} className="flex items-center justify-between gap-2 border-b border-white/10 py-5 hover:text-orange-300 transition-colors"><span><span className="block text-[9px] text-slate-500 mb-2">0{index + 1} / EXPLORE</span><span className="font-semibold text-sm md:text-lg">{link.name}</span></span><ArrowUpRight className="h-4 w-4 shrink-0" /></Link>)}
+                            </nav>
+                            <a href="https://www.google.com/maps/search/?api=1&query=Travel+Episodes+Poonamallee+Chennai" target="_blank" rel="noopener noreferrer" className="mt-6 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 hover:border-orange-300/40 transition-colors"><MapPin className="h-5 w-5 text-orange-300 shrink-0" /><span className="flex-1 text-xs leading-relaxed text-slate-400"><span className="block text-white font-semibold mb-1">Drop by the planning room</span>No.1, Etti Annal Nagar, Poonamallee,<br />Chennai, Tamil Nadu 600056</span><ArrowUpRight className="h-4 w-4 shrink-0" /></a>
                         </div>
                     </div>
-
-                    {/* Quick Links */}
-                    <div>
-                        <h3 className="text-white font-bold text-lg mb-6">Explore</h3>
-                        <ul className="space-y-4">
-                            <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
-                            <li><Link to="/destinations" className="hover:text-primary transition-colors">Destinations</Link></li>
-                            <li><Link to="/enquiry" className="hover:text-primary transition-colors">Enquiry</Link></li>
-                            <li><Link to="/contact" className="hover:text-primary transition-colors">Contact Us</Link></li>
-                        </ul>
-                    </div>
-
-                    {/* Contact Info */}
-                    <div>
-                        <h3 className="text-white font-bold text-lg mb-6">Contact Us</h3>
-                        <ul className="space-y-4">
-                            <li className="flex items-start gap-3">
-                                <MapPin className="w-5 h-5 text-primary shrink-0 mt-1" />
-                                <span className="text-sm">No.1, Etti Annal Nagar, Poonamallee,<br />Chennai, Tamil Nadu 600056</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <Phone className="w-5 h-5 text-primary shrink-0 mt-1" />
-                                <div className="flex flex-col text-sm">
-                                    <a href="tel:+919841844977" className="hover:text-white">+91 98418 44977</a>
-                                    <a href="tel:+918939718676" className="hover:text-white">+91 89397 18676</a>
-                                    <a href="tel:+919551933805" className="hover:text-white">+91 95519 33805</a>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Mini Map */}
-                    <div>
-                        <h3 className="text-white font-bold text-lg mb-6">Find Us</h3>
-                        <a
-                            href="https://www.google.com/maps/place/Travel+Episodes/@13.0456522,80.0917911,17z/data=!3m1!4b1!4m6!3m5!1s0x3a528b9a1b2cf29b:0x97f1cec8db27adb4!8m2!3d13.0456522!4d80.0917911!16s%2Fg%2F11tdj9kr2w"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block relative group overflow-hidden rounded-2xl border border-slate-700 h-48 md:h-auto md:aspect-square"
-                        >
-                            <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3886.8431791678345!2d80.0917911!3d13.0456522!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a528b9a1b2cf29b%3A0x97f1cec8db27adb4!2sTravel%20Episodes!5e0!3m2!1sen!2sin!4v1769772460834!5m2!1sen!2sin"
-                                width="100%"
-                                height="100%"
-                                style={{ border: 0, pointerEvents: 'none' }}
-                                allowFullScreen=""
-                                loading="lazy"
-                                title="Travel Episodes Map Preview"
-                                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500"
-                            ></iframe>
-                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex flex-col items-center justify-center gap-3">
-                                <img src="/google-logo.png" alt="Google" className="w-10 h-10 object-contain drop-shadow-lg transform transition-transform group-hover:scale-110" />
-                                <span className="bg-white/95 text-slate-900 px-5 py-2 rounded-full text-sm font-bold shadow-xl transform translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all">
-                                    Open in Maps
-                                </span>
-                            </div>
-                        </a>
-                        <p className="mt-3 text-[10px] text-slate-500 text-center italic">Click to view on Google Maps</p>
-                    </div>
                 </div>
-
-                <div className="border-t border-slate-800 pt-8 text-center text-slate-500 text-sm">
-                    <p>&copy; {new Date().getFullYear()} Travel Episodes Private Limited. All rights reserved.</p>
-                </div>
+                <LandmarkSkyline />
             </div>
-        </footer >
+            <div className="container py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-t border-white/10 text-[10px] md:text-xs text-slate-500">
+                <p>&copy; {new Date().getFullYear()} Travel Episodes Private Limited. All rights reserved.</p>
+                <p className="uppercase tracking-[0.15em]">One world. Endless episodes.</p>
+            </div>
+        </footer>
     );
 };
 
