@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { destinations } from '../data/destinations';
+import { getMonthlyFeatures } from '../data/monthlyFeatures';
 import { Filter, Search, ArrowUpRight, ArrowLeft, ArrowRight, Compass } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,7 +54,7 @@ const Destinations = () => {
 
     const pageCount = Math.ceil(filteredDestinations.length / pageSize);
     const visibleDestinations = filteredDestinations.slice((page - 1) * pageSize, page * pageSize);
-    const cover = destinations.find(destination => destination.id === (activeTab === 'Domestic' ? 'manali' : 'maldives')) || destinations[0];
+    const cover = getMonthlyFeatures().editor[activeTab];
     const changePage = next => {
         setPage(next);
         resultsRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
@@ -73,7 +74,7 @@ const Destinations = () => {
                     <Link to={`/destinations/${cover.id}`} className="relative min-h-56 md:min-h-80 group overflow-hidden">
                         <img src={cover.image} alt={cover.name} width="720" height="440" decoding="async" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                         <div className="absolute inset-0 bg-linear-to-t from-slate-950/80 via-transparent to-transparent" />
-                        <span className="absolute top-5 left-5 bg-white/90 text-slate-800 rounded-full text-xs font-bold px-3 py-2">The editor’s pick</span>
+                        <span className="absolute top-5 left-5 bg-white/90 text-slate-800 rounded-full text-xs font-bold px-3 py-2">This month’s editor’s pick</span>
                         <div className="absolute bottom-6 inset-x-6 text-white flex justify-between items-end gap-4"><div><p className="text-xs text-white/70 mb-2">{activeTab === 'Domestic' ? 'Closer to home. Far from ordinary.' : 'Your next passport memory.'}</p><p className="font-black text-3xl md:text-4xl">{cover.name}</p></div><ArrowUpRight className="h-7 w-7 shrink-0" /></div>
                     </Link>
                 </header>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowUpRight, Compass, Plane, X } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion, useScroll } from 'framer-motion';
+import useMobileMotion from './useMobileMotion';
 
 const navLinks = [
   { name: 'Home', path: '/', note: 'Where your next chapter begins' },
@@ -12,20 +13,27 @@ const navLinks = [
 
 const Navbar = () => {
   const [openPath, setOpenPath] = useState(null);
-  const [scrolled, setScrolled] = useState(false);
+  const [menuMounted, setMenuMounted] = useState(false);
+  const [scrolled, setScrolled] = useState(() => window.scrollY > 20);
   const location = useLocation();
   const navRef = useRef(null);
   const menuRef = useRef(null);
   const reducedMotion = useReducedMotion();
+  const mobile = useMobileMotion();
   const { scrollYProgress } = useScroll();
   const isOpen = openPath === location.key;
   const closeMenu = () => setOpenPath(null);
   const isTransparent = location.pathname === '/' && !scrolled && !isOpen;
   const active = path => path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
   const transition = { duration: reducedMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] };
+  const menuTransition = { duration: reducedMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] };
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    let previous = window.scrollY > 20;
+    const handleScroll = () => {
+      const next = window.scrollY > 20;
+      if (next !== previous) { previous = next; setScrolled(next); }
+    };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -43,11 +51,17 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!menuMounted) return;
     const previousOverflow = document.body.style.overflow;
     const previousFocus = document.activeElement;
     document.body.style.overflow = 'hidden';
-    const frame = requestAnimationFrame(() => menuRef.current?.querySelector('button, a')?.focus());
+    document.documentElement.dataset.mobileMenuOpen = 'true';
+    document.dispatchEvent(new Event('mobile-menu-activity'));
+    const background = [...(menuRef.current?.parentElement?.children || [])]
+      .filter(element => element !== menuRef.current);
+    const previousInert = background.map(element => element.inert);
+    background.forEach(element => { element.inert = true; });
+    const frame = requestAnimationFrame(() => menuRef.current?.querySelector('button, a')?.focus({ preventScroll: true }));
     const handleKey = event => {
       if (event.key === 'Escape') setOpenPath(null);
       if (event.key !== 'Tab') return;
@@ -62,11 +76,14 @@ const Navbar = () => {
     return () => {
       cancelAnimationFrame(frame);
       document.body.style.overflow = previousOverflow;
+      delete document.documentElement.dataset.mobileMenuOpen;
+      document.dispatchEvent(new Event('mobile-menu-activity'));
+      background.forEach((element, index) => { element.inert = previousInert[index]; });
       document.removeEventListener('keydown', handleKey);
       desktop.removeEventListener('change', onDesktop);
-      previousFocus?.focus();
+      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     };
-  }, [isOpen]);
+  }, [menuMounted]);
 
   return (
     <>
@@ -84,7 +101,7 @@ const Navbar = () => {
                   aria-current={active(link.path) ? 'page' : undefined}
                   className={`relative px-3 lg:px-4 py-3 rounded-full text-sm font-semibold transition-colors ${active(link.path) ? 'text-primary-dark' : isTransparent ? 'text-white/80 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
                 >
-                  {active(link.path) && <motion.span layoutId="nav-active-pill" transition={transition} className="absolute inset-0 rounded-full bg-orange-100" />}
+                  {active(link.path) && !mobile && <motion.span layoutId="nav-active-pill" transition={transition} className="absolute inset-0 rounded-full bg-orange-100" />}
                   <span className="relative">{link.name}</span>
                 </Link>
               ))}
@@ -97,7 +114,10 @@ const Navbar = () => {
               aria-label={isOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isOpen}
               aria-controls="mobile-navigation"
-              onClick={() => setOpenPath(isOpen ? null : location.key)}
+              onClick={() => {
+                if (isOpen) closeMenu();
+                else { setMenuMounted(true); setOpenPath(location.key); }
+              }}
               className="md:hidden flex min-h-11 items-center gap-3 rounded-full px-4 border border-current/15 text-xs font-bold"
             >
               <span>{isOpen ? 'Close' : 'Explore'}</span>
@@ -114,7 +134,7 @@ const Navbar = () => {
           )}
         </div>
       </header>
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={() => { if (!isOpen) setMenuMounted(false); }}>
         {isOpen && (
           <motion.div
             ref={menuRef}
@@ -122,11 +142,11 @@ const Navbar = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="mobile-menu-title"
-            initial={reducedMotion ? { opacity: 0 } : { clipPath: 'inset(0 0 100% 0 round 0 0 48px 48px)' }}
-            animate={{ opacity: 1, clipPath: 'inset(0 0 0% 0 round 0px)' }}
-            exit={reducedMotion ? { opacity: 0 } : { clipPath: 'inset(0 0 100% 0 round 0 0 48px 48px)' }}
-            transition={transition}
-            className="fixed inset-0 z-[110] md:hidden bg-[#f5f1e9] overflow-y-auto"
+            initial={reducedMotion ? { opacity: 0 } : { y: '-100%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reducedMotion ? { opacity: 0 } : { y: '-100%' }}
+            transition={menuTransition}
+            className="mobile-menu-panel fixed inset-0 z-[110] md:hidden bg-[#f5f1e9] overflow-y-auto overscroll-contain"
           >
             <div className="min-h-svh flex flex-col px-6 pt-6 pb-8 relative overflow-hidden">
               <Compass className="absolute -right-12 bottom-24 w-64 h-64 text-orange-200/40 pointer-events-none" aria-hidden="true" />
@@ -145,12 +165,10 @@ const Navbar = () => {
               </div>
               <nav aria-label="Mobile navigation" className="relative mb-8">
                 {navLinks.map((link, index) => (
-                  <motion.div
+                  <div
                     key={link.path}
-                    initial={reducedMotion ? false : { y: 48, opacity: 0, rotate: 3 }}
-                    animate={{ y: 0, opacity: 1, rotate: 0 }}
-                    exit={{ y: -12, opacity: 0 }}
-                    transition={{ ...transition, delay: reducedMotion ? 0 : 0.08 + index * 0.07 }}
+                    className={reducedMotion ? undefined : 'mobile-menu-link-enter'}
+                    style={{ '--menu-delay': `${0.03 + index * 0.035}s` }}
                   >
                     <Link
                       to={link.path}
@@ -167,7 +185,7 @@ const Navbar = () => {
                       </div>
                       <p className="text-xs text-slate-500 ml-8 mt-3">{link.note}</p>
                     </Link>
-                  </motion.div>
+                  </div>
                 ))}
               </nav>
               <div className="relative mt-auto">

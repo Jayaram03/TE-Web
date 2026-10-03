@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'framer-motion';
+import useMobileMotion from './useMobileMotion';
 
 // Animate the native scroll position, not a transform, so swipe and autoplay
 // always operate on the same track and cannot fight one another.
@@ -9,6 +10,7 @@ const AutoScrollMarquee = ({ children, label, speed = 50 }) => {
     const interaction = useRef({ pointer: false, focus: false, until: 0 });
     const lastAutoPosition = useRef(null);
     const reducedMotion = useReducedMotion();
+    const mobile = useMobileMotion();
 
     const pauseTemporarily = () => {
         interaction.current.until = performance.now() + 1100;
@@ -22,8 +24,14 @@ const AutoScrollMarquee = ({ children, label, speed = 50 }) => {
         let frame;
         let previousTime = 0;
         let visible = false;
+        let menuOpen = document.documentElement.dataset.mobileMenuOpen === 'true';
         let position = viewport.scrollLeft;
         let cycleWidth = group.getBoundingClientRect().width;
+        // Prioritize the user's vertical scroll over secondary autoplay work.
+        const onPageScroll = () => {
+            interaction.current.until = Math.max(interaction.current.until, performance.now() + 180);
+        };
+        if (mobile) window.addEventListener('scroll', onPageScroll, { passive: true });
         const sizeObserver = new ResizeObserver(() => {
             cycleWidth = group.getBoundingClientRect().width;
         });
@@ -46,21 +54,33 @@ const AutoScrollMarquee = ({ children, label, speed = 50 }) => {
 
         const visibilityObserver = new IntersectionObserver(([entry]) => {
             visible = entry.isIntersecting;
+            syncAnimation();
+        });
+        const syncAnimation = () => {
             previousTime = 0;
-            if (visible && !frame) frame = requestAnimationFrame(tick);
-            if (!visible && frame) {
+            if (visible && !menuOpen && !document.hidden && !frame) frame = requestAnimationFrame(tick);
+            if ((!visible || menuOpen || document.hidden) && frame) {
                 cancelAnimationFrame(frame);
                 frame = undefined;
             }
-        });
+        };
+        const onMenuActivity = () => {
+            menuOpen = document.documentElement.dataset.mobileMenuOpen === 'true';
+            syncAnimation();
+        };
+        document.addEventListener('mobile-menu-activity', onMenuActivity);
+        document.addEventListener('visibilitychange', syncAnimation);
         visibilityObserver.observe(viewport);
 
         return () => {
             cancelAnimationFrame(frame);
             sizeObserver.disconnect();
             visibilityObserver.disconnect();
+            document.removeEventListener('mobile-menu-activity', onMenuActivity);
+            document.removeEventListener('visibilitychange', syncAnimation);
+            if (mobile) window.removeEventListener('scroll', onPageScroll);
         };
-    }, [reducedMotion, speed]);
+    }, [reducedMotion, speed, mobile]);
 
     return (
         <div>

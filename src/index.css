@@ -1,5 +1,35 @@
 @import "tailwindcss";
 
+/* Stop decorative background work while the mobile dialog owns the screen. */
+html[data-mobile-menu-open="true"] * {
+  animation-play-state: paused !important;
+}
+
+.mobile-menu-panel {
+  will-change: transform;
+  contain: paint;
+}
+
+.mobile-menu-link-enter {
+  animation: mobile-menu-arrive 0.22s ease-out var(--menu-delay) both;
+}
+
+html[data-mobile-menu-open="true"] .mobile-menu-link-enter {
+  animation-play-state: running !important;
+}
+
+@keyframes mobile-menu-arrive {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 @theme {
   --color-primary: #f97316;
   /* Orange 500 */
@@ -369,33 +399,474 @@
 
 .home-hero {
   position: relative;
-  height: 140svh;
   background: #0f172a;
 }
 
 .home-hero-stage {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  min-height: 740px;
-  padding-top: 112px;
-  padding-bottom: 20px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  position: relative;
+  padding-top: calc(var(--site-header-height) + 40px);
+  padding-bottom: 56px;
+  overflow: clip;
   background: radial-gradient(ellipse at 85% 40%, #334155 0%, transparent 60%), #0f172a;
 }
 
 .hero-layout {
   width: 100%;
   display: grid;
-  gap: 28px;
-  align-items: center;
+  gap: 64px;
+  align-items: start;
 }
 
 .hero-copy {
   transform-origin: left center;
+}
+
+.hero-scroll-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.hero-visual-track {
+  --flight-row-height: clamp(86px, 11svh, 110px);
+  --flight-scene-height: calc(var(--flight-row-height) * 3.65 + 12px);
+  --flight-finale-space: calc(var(--flight-row-height) * 0.5);
+  display: block;
+  height: calc(var(--flight-scene-height) + 100px + 140svh);
+  min-width: 0;
+}
+
+.hero-visual-stage {
+  position: sticky;
+  top: calc(var(--site-header-height) + 16px);
+  padding-top: 8px;
+  padding-bottom: 16px;
+  max-width: 580px;
+  margin-inline: auto;
+}
+
+.hero-flight-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: #fdba74;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hero-flight-heading>span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.hero-flight-heading>span:last-child {
+  color: #94a3b8;
+  font-size: 9px;
+  text-align: right;
+}
+
+.hero-flight-live-dot {
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  background: #fdba74;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px #fdba7415;
+}
+
+.hero-flight-scene {
+  position: relative;
+  height: var(--flight-scene-height);
+  isolation: isolate;
+}
+
+.hero-flight-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* A viewport-sized sky follows the hero, avoiding a huge composited texture. */
+.hero-sky-viewport {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  contain: paint;
+}
+
+.hero-sky-horizon {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 75% 30%, #6366f128, transparent 60%),
+    linear-gradient(180deg, #02061755, transparent 55%, #fdba7409);
+}
+
+.hero-flight-stars,
+.hero-flight-clouds {
+  position: absolute;
+  inset: 0;
+}
+
+.flight-star {
+  position: absolute;
+  border-radius: 50%;
+  background: #e0e7ff;
+}
+
+.flight-star-spark {
+  box-shadow: 0 0 8px #c7d2fe;
+  animation: hero-sky-shimmer 7s ease-in-out infinite paused;
+}
+
+.hero-flight-atmosphere.is-active .flight-star-spark,
+.hero-flight-atmosphere.is-active .flight-cloud {
+  animation-play-state: running;
+}
+
+.flight-star-spark::before,
+.flight-star-spark::after {
+  content: '';
+  position: absolute;
+  background: #c7d2feaa;
+  border-radius: 2px;
+}
+
+.flight-star-spark::before {
+  width: 12px;
+  height: 1px;
+  left: -4px;
+  top: 1px;
+}
+
+.flight-star-spark::after {
+  height: 12px;
+  width: 1px;
+  top: -4px;
+  left: 1px;
+}
+
+.flight-cloud {
+  position: absolute;
+  width: clamp(240px, 38vw, 600px);
+  height: auto;
+  animation: hero-cloud-pass 24s ease-in-out infinite alternate paused;
+}
+
+.flight-cloud-one {
+  left: -10%;
+  top: 12%;
+  animation-delay: -8s;
+}
+
+.flight-cloud-two {
+  right: -16%;
+  top: 40%;
+  width: clamp(300px, 48vw, 740px);
+  animation-duration: 32s;
+  animation-delay: -16s;
+  animation-direction: alternate-reverse;
+}
+
+.flight-cloud-three {
+  left: -20%;
+  bottom: 8%;
+  width: clamp(300px, 50vw, 780px);
+  animation-duration: 20s;
+  animation-delay: -6s;
+}
+
+.flight-cloud-four {
+  right: -25%;
+  top: 4%;
+  animation-duration: 28s;
+  animation-delay: -20s;
+}
+
+@keyframes hero-cloud-pass {
+  from {
+    transform: translate3d(-28px, 8px, 0);
+  }
+
+  to {
+    transform: translate3d(70px, -12px, 0);
+  }
+}
+
+@keyframes hero-sky-shimmer {
+
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.hero-flight-card-glint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, #ffffff22 48%, transparent 65%);
+}
+
+.hero-flight-grid {
+  position: absolute;
+  inset: 0 6px;
+}
+
+.hero-flight-card {
+  position: absolute;
+  width: calc(50% - 24px);
+  height: var(--flight-row-height);
+  min-width: 0;
+  transform-origin: center;
+}
+
+.hero-flight-card:nth-child(1) {
+  left: 0;
+  top: 0;
+}
+
+.hero-flight-card:nth-child(2) {
+  right: 0;
+  top: 17%;
+}
+
+.hero-flight-card:nth-child(3) {
+  left: 0;
+  top: 34%;
+}
+
+.hero-flight-card:nth-child(4) {
+  right: 0;
+  top: 51%;
+}
+
+.hero-flight-card:nth-child(5) {
+  left: 0;
+  top: 68%;
+}
+
+.hero-flight-card-link {
+  position: relative;
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #ffffff25;
+  border-radius: 14px;
+  background: #1e293b;
+  box-shadow: 0 8px 20px #02061730;
+}
+
+.hero-flight-card-link:focus-visible {
+  outline: 2px solid #fdba74;
+  outline-offset: 3px;
+}
+
+.hero-flight-card:focus-within {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.hero-flight-card-link img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-flight-card-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #02061730, transparent 25%, #020617dd);
+}
+
+.hero-flight-stop {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.hero-flight-card-copy {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 20px;
+  color: white;
+}
+
+.hero-flight-card-copy p {
+  font-size: clamp(13px, 1.4vw, 20px);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.hero-flight-card-copy>span {
+  display: block;
+  margin-top: 4px;
+  font-size: 9px;
+  line-height: 1.25;
+  color: #cbd5e1;
+}
+
+.hero-flight-card-arrow {
+  position: absolute;
+  right: 6px;
+  bottom: 10px;
+  color: #fdba74;
+}
+
+.hero-flight-route {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.hero-flight-route-curve {
+  position: absolute;
+  top: 0;
+  left: -17px;
+  width: 36px;
+  height: 100%;
+}
+
+.hero-flight-plane-carrier {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-flight-plane {
+  position: absolute;
+  top: -17px;
+  left: -16px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fdba7420, transparent 70%);
+  color: #ffedd5;
+  filter: none;
+}
+
+.hero-plane-wake {
+  position: absolute;
+  top: -56px;
+  left: -2px;
+  width: 6px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(to bottom, transparent, #e0e7ff44);
+  opacity: 0.7;
+}
+
+.hero-flight-waypoint {
+  position: absolute;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid #fdba74;
+  background: #0f172a;
+  z-index: -1;
+}
+
+.hero-flight-waypoint-0 {
+  top: 16%;
+  transform: translateX(6.3px);
+}
+
+.hero-flight-waypoint-1 {
+  top: 50%;
+}
+
+.hero-flight-waypoint-2 {
+  top: 84%;
+  transform: translateX(-6.3px);
+}
+
+.hero-flight-ticket {
+  position: absolute;
+  right: 0;
+  top: 85%;
+  width: calc(50% - 24px);
+  height: var(--flight-row-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px dashed #fdba7460;
+  background: linear-gradient(135deg, #fdba7415, #fdba7405);
+  color: white;
+  min-width: 0;
+}
+
+.hero-ticket-label {
+  color: #fdba74;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero-flight-ticket p {
+  font-size: clamp(12px, 1.2vw, 17px);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.hero-flight-ticket p span {
+  color: #fdba74;
+}
+
+.hero-flight-ticket a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin-block: -10px;
+  font-size: 10px;
+  color: #fed7aa;
+}
+
+.hero-flight-ticket a:focus-visible {
+  outline: 2px solid #fdba74;
+  outline-offset: 2px;
+}
+
+.hero-monthly-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: calc(16px + var(--flight-finale-space));
+  color: #94a3b8;
+  font-size: 9px;
+  letter-spacing: 0.03em;
 }
 
 .scroll-ink {
@@ -407,115 +878,43 @@
   -webkit-background-clip: text;
 }
 
-.hero-orbit {
-  position: absolute;
-  inset: -8% -4%;
-  border: 1px dashed #fdba7444;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.hero-photo-stack {
-  position: relative;
-  height: 230px;
-  width: 100%;
-  max-width: 480px;
-  margin-inline: auto;
-}
-
-.hero-postcard {
-  position: absolute;
-  width: 40%;
-  top: 6px;
-}
-
-.hero-postcard-left {
-  left: 5%;
-  z-index: 10;
-}
-
-.hero-postcard-right {
-  right: 5%;
-  z-index: 10;
-}
-
-.hero-postcard-center {
-  left: 30%;
-  z-index: 20;
-  top: 20px;
-}
-
-.hero-flight-line {
-  width: 100%;
-  margin-top: 32px;
-}
-
-.hero-topography {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.13;
-  background: repeating-radial-gradient(ellipse at 90% 50%, transparent 0 30px, #cbd5e155 31px 32px, transparent 33px 64px);
-}
-
 @media (min-width: 1024px) {
-  .home-hero-stage {
-    padding-top: 160px;
-    min-height: 760px;
-  }
-
   .hero-layout {
     grid-template-columns: 1.1fr 1fr;
-    gap: 40px;
+    gap: 56px;
   }
 
-  .hero-photo-stack {
-    height: 410px;
-    max-width: 620px;
-  }
-
-  .hero-postcard {
-    width: 48%;
-    top: 45px;
-  }
-
-  .hero-postcard-left {
-    left: 0;
-  }
-
-  .hero-postcard-right {
-    right: 0;
-  }
-
-  .hero-postcard-center {
-    left: 26%;
-    top: 75px;
-  }
-
-  .hero-flight-line {
-    margin-top: 64px;
+  .hero-copy {
+    position: sticky;
+    top: calc(var(--site-header-height) + 40px);
   }
 }
 
-.home-hero-static {
+.hero-visual-static {
   height: auto;
 }
 
-.home-hero-static .home-hero-stage {
+.hero-visual-static .hero-visual-stage,
+.home-hero-static .hero-copy {
   position: relative;
-  height: auto;
+  top: auto;
 }
 
-@media (max-height: 760px) {
-  .home-hero {
-    height: auto;
+.home-hero-static .flight-cloud,
+.home-hero-static .flight-star-spark {
+  animation: none;
+}
+
+/* Short landscape screens keep the flight motion without an oversized pinned board. */
+@media (max-height: 620px) {
+  .hero-visual-track {
+    height: auto !important;
   }
 
-  .home-hero-stage {
-    position: relative;
-    height: auto;
-    min-height: 0;
-    padding-bottom: 40px;
+  .hero-visual-stage,
+  .hero-copy {
+    position: relative !important;
+    top: auto !important;
   }
 }
 
@@ -582,6 +981,152 @@
 
 /* Keep the cinematic sticky scroll on desktop, not a tall empty phone track. */
 @media (max-width: 767px) {
+  .home-hero-static .hero-flight-clouds {
+    opacity: 0.08;
+  }
+
+  .manifesto-tags {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    justify-content: center;
+    column-gap: 12px;
+    row-gap: 16px;
+  }
+
+  .manifesto-tag {
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .manifesto-tag-caption {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: center;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .home-hero {
+    height: auto;
+  }
+
+  .home-hero .home-hero-stage {
+    position: relative;
+    height: auto;
+    min-height: 0;
+    padding-top: calc(var(--site-header-height) + 24px);
+    padding-bottom: 24px;
+    overflow: clip;
+  }
+
+  .hero-layout {
+    gap: 64px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(32px, 9.7vw, 44px);
+    line-height: 1.04;
+    letter-spacing: -0.045em;
+    margin-bottom: 16px;
+  }
+
+  .hero-eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+  }
+
+  .hero-copy>p:not(.hero-eyebrow) {
+    max-width: 36ch;
+    margin-bottom: 20px;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
+
+  .hero-actions .btn {
+    min-height: 44px;
+    padding: 10px 12px;
+    gap: 5px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .hero-visual-track {
+    height: calc(var(--flight-scene-height) + 100px + 140svh);
+  }
+
+  .hero-visual-stage {
+    max-width: 420px;
+  }
+
+  .hero-flight-heading {
+    font-size: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  .hero-flight-heading>span:last-child {
+    max-width: 100px;
+    font-size: 8px;
+  }
+
+  .hero-flight-card-copy {
+    right: 16px;
+  }
+
+  .hero-flight-card-copy p {
+    font-size: 12px;
+  }
+
+  .hero-flight-card-copy>span {
+    font-size: 8px;
+  }
+
+  .hero-flight-ticket {
+    gap: 4px;
+    padding: 8px;
+  }
+
+  .hero-flight-ticket a {
+    font-size: 9px;
+  }
+
+  .hero-scroll-hint {
+    font-size: 10px;
+    margin-top: 20px;
+  }
+
+  .hero-visual-static {
+    height: auto;
+  }
+
+  .hero-visual-static .hero-visual-stage {
+    position: relative;
+    top: auto;
+  }
+
+  .site-nav-shell {
+    backdrop-filter: none;
+  }
+
+  .detail-section-toolbar {
+    backdrop-filter: none;
+  }
+
+  .travel-route {
+    animation-name: mobile-route-drift;
+  }
+
+  .night-moon {
+    filter: none;
+  }
+
   .journey-scene {
     height: auto;
   }
@@ -594,7 +1139,24 @@
   }
 }
 
+@keyframes mobile-route-drift {
+  50% {
+    transform: translate3d(12px, -8px, 0);
+  }
+}
+
+@keyframes doodle-float {
+  50% {
+    transform: translate3d(0, -18px, 0) rotate(var(--doodle-rotate, 10deg));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+
+  .flight-cloud,
+  .flight-star-spark {
+    animation: none;
+  }
 
   .skyline-track,
   .skyline-flight,

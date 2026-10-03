@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useInView } from 'framer-motion';
+import useMobileMotion from './useMobileMotion';
 
 // Fixed seeded positions: natural distribution without random rerender flicker.
 const stars = Array.from({ length: 72 }, (_, index) => {
@@ -19,10 +20,11 @@ const stars = Array.from({ length: 72 }, (_, index) => {
 const NightSky = () => {
     const ref = useRef(null);
     const visible = useInView(ref);
+    const mobile = useMobileMotion();
 
     return (
         <div ref={ref} aria-hidden="true" className={`night-sky ${visible ? 'is-active' : ''}`}>
-            {stars.map((style, index) => <span key={index} className={`night-star ${index % 4 === 0 ? 'night-star-twinkle' : ''}`} style={style} />)}
+            {(mobile ? stars.slice(0, 28) : stars).map((style, index) => <span key={index} className={`night-star ${index % 4 === 0 ? 'night-star-twinkle' : ''}`} style={style} />)}
             <svg viewBox="0 0 80 80" className="night-moon" focusable="false">
                 <path d="M58 11A30 30 0 1 0 69 61A30 30 0 0 1 58 11Z" fill="#fef3c7" />
             </svg>

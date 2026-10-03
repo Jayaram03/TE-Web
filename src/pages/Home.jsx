@@ -167,8 +167,8 @@ const GoogleReviewSection = () => {
     return (
         <section className="py-24 bg-white relative overflow-hidden">
             <div className="container relative z-10">
-                <div className="max-w-4xl mx-auto bg-gradient-to-br from-slate-50 to-orange-50/30 rounded-3xl p-8 md:p-12 border border-slate-100 shadow-xl shadow-slate-200/50">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div className="max-w-4xl mx-auto bg-gradient-to-br from-slate-50 to-orange-50/30 rounded-3xl p-4 sm:p-8 md:p-12 border border-slate-100 shadow-xl shadow-slate-200/50">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
                         <div>
                             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 leading-tight">
                                 How was your <span className="text-primary italic">Adventure?</span>
@@ -181,7 +181,7 @@ const GoogleReviewSection = () => {
                                     href={googleReviewUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="btn btn-primary flex items-center justify-center gap-3 px-8 py-4 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 group"
+                                    className="btn btn-primary flex items-center justify-center gap-2 px-3 sm:px-8 py-4 text-sm sm:text-base shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 group"
                                 >
                                     Write a Review on Google
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -198,13 +198,13 @@ const GoogleReviewSection = () => {
                             </div>
                         </div>
 
-                        <div className="flex flex-col items-center justify-center bg-white rounded-2xl p-8 shadow-inner border border-slate-50">
+                        <div className="flex min-w-0 flex-col items-center justify-center bg-white rounded-2xl px-2 py-6 sm:p-4 lg:p-8 shadow-inner border border-slate-50">
                             <div className="text-center mb-6">
                                 <div className="text-5xl font-extrabold text-slate-900 mb-1">4.9</div>
                                 <div className="text-slate-400 text-sm font-medium uppercase tracking-widest">Average Rating</div>
                             </div>
 
-                            <div className="flex flex-wrap justify-center gap-1 mb-8">
+                            <div className="flex flex-nowrap justify-center gap-0 sm:gap-1 mb-6 sm:mb-8" role="group" aria-label="Rate your trip on Google">
                                 {[1, 2, 3, 4, 5].map((i) => (
                                     <motion.button
                                         key={i}
@@ -215,10 +215,10 @@ const GoogleReviewSection = () => {
                                         onClick={() => window.open(googleReviewUrl, '_blank', 'noopener,noreferrer')}
                                         whileHover={{ scale: 1.2 }}
                                         whileTap={{ scale: 0.9 }}
-                                        className="relative min-h-11 min-w-11 flex items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-primary"
+                                        className="relative h-11 w-11 shrink-0 flex items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-primary"
                                     >
                                         <Star
-                                            className={`w-10 h-10 transition-all duration-300 ${i <= (hoveredStar || 5)
+                                            className={`w-8 h-8 sm:w-10 sm:h-10 transition-colors duration-300 ${i <= (hoveredStar || 5)
                                                 ? 'fill-yellow-400 text-yellow-400'
                                                 : 'text-slate-200'
                                                 }`}
@@ -233,8 +233,8 @@ const GoogleReviewSection = () => {
                                 ))}
                             </div>
 
-                            <div className="flex items-center gap-3 text-slate-500 text-sm">
-                                <img src="/google-logo.png" alt="Google" className="w-6 h-6 object-contain" />
+                            <div className="flex items-center justify-center gap-2 text-center text-slate-500 text-xs sm:text-sm">
+                                <img src="/google-logo.png" alt="Google" className="w-5 h-5 shrink-0 object-contain" />
                                 Trustworthy reviews from Google
                             </div>
                         </div>
