@@ -74,7 +74,7 @@ const Navbar = () => {
         <div className={`site-nav-shell mx-auto max-w-7xl rounded-2xl md:rounded-full border transition-colors duration-300 ${isTransparent ? 'bg-slate-900/65 border-white/15 text-white' : 'bg-white/95 border-slate-200 text-slate-900 shadow-lg shadow-slate-900/5'}`}>
           <nav aria-label="Main navigation" className="flex items-center justify-between h-full px-3 md:px-5 gap-3">
             <Link to="/" aria-label="Travel Episodes home" className="shrink-0">
-              <img src="/logo.png" alt="Travel Episodes" className="h-12 md:h-16 w-auto max-w-32 object-contain rounded-lg" />
+              <img src="/logo-header.png" alt="Travel Episodes" width="512" height="176" className="w-36 sm:w-40 lg:w-48 h-auto max-h-16 object-contain" />
             </Link>
             <div className="hidden md:flex items-center gap-1">
               {navLinks.map(link => (

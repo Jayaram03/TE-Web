@@ -25,7 +25,7 @@ const Footer = () => {
                     </ScrollReveal>
                     <div className="mt-8 md:mt-12 grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8 md:gap-12 pb-8">
                         <div>
-                            <Link to="/" aria-label="Travel Episodes home" className="inline-flex rounded-2xl bg-white p-3 mb-5 hover:-rotate-2 transition-transform focus-visible:outline-2 focus-visible:outline-orange-300"><img src="/logo.png" alt="Travel Episodes" width="176" height="80" loading="lazy" className="h-16 md:h-20 w-auto max-w-44 object-contain" /></Link>
+                            <Link to="/" aria-label="Travel Episodes home" className="inline-flex rounded-2xl bg-white p-3 mb-5 hover:-rotate-2 transition-transform focus-visible:outline-2 focus-visible:outline-orange-300"><img src="/logo-header.png" alt="Travel Episodes" width="512" height="176" loading="lazy" className="w-48 md:w-56 h-auto object-contain" /></Link>
                             <div className="flex items-center gap-3 mb-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-orange-300"><span>Chennai roots</span><span className="flex items-center gap-1.5 text-white/30" aria-hidden="true"><span className="w-5 border-t border-dashed border-current" /><Plane className="h-3.5 w-3.5 -rotate-12" /><span className="w-5 border-t border-dashed border-current" /></span><span>Limitless horizons</span></div>
                             <p className="text-sm leading-relaxed text-slate-400 max-w-sm mb-5">Trips worth taking. Stories worth keeping. A real travel crew to make it all happen.</p>
                             <div className="flex gap-2">
