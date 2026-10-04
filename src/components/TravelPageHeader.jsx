@@ -13,7 +13,7 @@ const TravelPageHeader = ({ eyebrow, title, accent, description, destinationId =
             </svg>
             <div className="relative z-10 grid items-center gap-6 lg:grid-cols-[1.2fr_1fr] lg:gap-12">
                 <div className="min-w-0">
-                    <p className="inline-flex items-center gap-2 text-[11px] md:text-xs font-bold uppercase tracking-[0.18em] text-primary-dark mb-4"><Compass className="h-4 w-4" aria-hidden="true" />{eyebrow}</p>
+                    {eyebrow && <p className="inline-flex items-center gap-2 text-[11px] md:text-xs font-bold uppercase tracking-[0.18em] text-primary-dark mb-4"><Compass className="h-4 w-4" aria-hidden="true" />{eyebrow}</p>}
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.06] font-black tracking-tight text-slate-900 mb-4">{title}<br /><span className="text-primary">{accent}</span></h1>
                     <p className="text-sm sm:text-base md:text-lg text-slate-600 leading-relaxed max-w-xl">{description}</p>
                     {children && <div className="mt-6">{children}</div>}
@@ -25,9 +25,9 @@ const TravelPageHeader = ({ eyebrow, title, accent, description, destinationId =
                             <div className="absolute inset-0 bg-linear-to-t from-slate-950/50 to-transparent" />
                             <div className="absolute bottom-4 left-4 flex items-center gap-2 text-sm font-semibold text-white"><MapPin className="h-4 w-4" aria-hidden="true" />{destination.name}</div>
                         </div>
-                        <div className="flex items-center justify-between gap-3 px-2 pt-3 pb-1 text-[10px] sm:text-xs font-bold tracking-wide text-slate-500"><span>TRAVEL EPISODES / FIELD NOTES</span><Plane className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /></div>
+                        <div className="flex items-center justify-between gap-3 px-2 pt-3 pb-1 text-[10px] sm:text-xs font-bold tracking-wide text-slate-500"><span>TRAVEL EPISODES</span><Plane className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /></div>
                     </div>
-                    <div className="absolute -left-2 -bottom-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 -rotate-3 text-xs font-bold text-primary-dark shadow-sm">{note || 'Collect moments, not things.'}</div>
+                    {note && <div className="absolute -left-2 -bottom-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 -rotate-3 text-xs font-bold text-primary-dark shadow-sm">{note}</div>}
                     <div aria-hidden="true" className="absolute -right-2 -top-3 rotate-12 flex h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-primary/40 bg-orange-50 text-primary"><Compass className="h-7 w-7" /></div>
                 </div>
             </div>

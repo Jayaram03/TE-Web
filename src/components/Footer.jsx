@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Instagram, Mail, MapPin, MessageCircle, Phone, Plane } from 'lucide-react';
 import LandmarkSkyline from './LandmarkSkyline';
-import NightSky from './NightSky';
+import FooterSky from './FooterSky';
 import ScrollReveal from './ScrollReveal';
 
 const Footer = () => {
@@ -12,9 +12,9 @@ const Footer = () => {
     });
 
     return (
-        <footer className="bg-slate-950 text-slate-300 relative overflow-x-clip">
-            <div className="relative isolate overflow-hidden bg-linear-to-b from-slate-900 via-indigo-950/30 to-slate-950 pt-14 md:pt-24">
-                <NightSky />
+        <footer className="travel-footer bg-slate-950 text-slate-300 relative overflow-x-clip">
+            <div className="footer-lounge relative isolate overflow-hidden bg-linear-to-b from-slate-900 via-indigo-950/30 to-slate-950 pt-14 md:pt-24">
+                <FooterSky />
                 <div className="container relative z-10">
                     <div className="flex items-center justify-between gap-4 text-[10px] md:text-xs uppercase tracking-[0.2em] text-orange-300 mb-7"><span className="inline-flex items-center gap-2"><Plane className="h-4 w-4" /> The departure lounge</span><span className="hidden sm:block">Next stop: your next chapter</span></div>
                     <ScrollReveal tilt={-2}>

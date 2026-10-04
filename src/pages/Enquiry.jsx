@@ -6,6 +6,11 @@ import {
     Send, CheckCircle2, AlertCircle, Loader2, Plane, ShieldCheck
 } from 'lucide-react';
 import TravelPageHeader from '../components/TravelPageHeader';
+import TrendingTripPicker from '../components/TrendingTripPicker';
+import { useSearchParams } from 'react-router-dom';
+import { destinations } from '../data/destinations';
+import { trendingDestinations } from '../data/trendingDestinations';
+import { suggestedTransport, tomorrowDate, tripNights } from '../data/tripPlanning';
 
 // ============================================================================
 // This form submits directly into the SAME Google Sheet that your original
@@ -180,13 +185,22 @@ function splitDate(value) {
     return { year, month, day };
 }
 
-const Enquiry = () => {
-    const [form, setForm] = useState(initialForm);
+const EnquiryForm = ({ destinationName = '' }) => {
+    const [form, setForm] = useState(() => ({ ...initialForm, destination: destinationName }));
+    const [manualTransport, setManualTransport] = useState(false);
+    const minStart = tomorrowDate();
+    const nights = tripNights(form.tripStart, form.tripEnd);
+    const inspiration = destinations.find(destination => destination.name.toLowerCase() === form.destination.toLowerCase()) || trendingDestinations[0];
     const [status, setStatus] = useState('idle'); // idle | loading | success | error | unconfirmed
     const [errors, setErrors] = useState({});
 
     const update = (key, value) => {
-        setForm((f) => ({ ...f, [key]: value }));
+        if (key === 'transport') setManualTransport(true);
+        setForm(f => ({
+            ...f, [key]: value,
+            ...(key === 'people' && !manualTransport && Number.isSafeInteger(Number(value)) && Number(value) > 0 ? { transport: suggestedTransport(value) } : {}),
+            ...(key === 'tripStart' && f.tripEnd && f.tripEnd < value ? { tripEnd: '' } : {}),
+        }));
         if (errors[key]) setErrors((e) => ({ ...e, [key]: null }));
     };
 
@@ -199,6 +213,7 @@ const Enquiry = () => {
         if (!form.startingPoint.trim()) next.startingPoint = 'Tell us your starting location';
         if (!form.people.trim() || !Number.isSafeInteger(Number(form.people)) || Number(form.people) < 1) next.people = 'Enter a whole number of travellers (at least 1)';
         if (!form.tripStart) next.tripStart = 'Select a start date';
+        else if (form.tripStart < tomorrowDate()) next.tripStart = 'Choose a future date (tomorrow or later)';
         if (!form.tripEnd) next.tripEnd = 'Select an end date';
         if (form.tripStart && form.tripEnd && form.tripEnd < form.tripStart) {
             next.tripEnd = 'End date must be after start date';
@@ -271,7 +286,8 @@ const Enquiry = () => {
     };
 
     const resetForm = () => {
-        setForm(initialForm);
+        setForm({ ...initialForm, destination: destinationName });
+        setManualTransport(false);
         setErrors({});
         setStatus('idle');
     };
@@ -282,33 +298,22 @@ const Enquiry = () => {
             <iframe name={IFRAME_NAME} title="Enquiry submission target" style={{ display: 'none' }} />
 
             <div className="container px-4">
-                <TravelPageHeader eyebrow="Your ideas. Our expertise." title="Dream it." accent="We’ll plan it." description="Tell us where you want to go and how you like to travel. We’ll bring the details together into a trip that’s truly yours." destinationId="thailand" note="A journey made just for you.">
-                    <div className="flex flex-wrap gap-2 text-[10px] md:text-xs font-semibold text-slate-600"><span className="rounded-full bg-white border border-orange-200 px-3 py-2">Personal itinerary</span><span className="rounded-full bg-white border border-orange-200 px-3 py-2">Real travel experts</span><span className="rounded-full bg-white border border-orange-200 px-3 py-2">Your pace. Your preferences.</span></div>
-                </TravelPageHeader>
+                <TravelPageHeader title="Plan your" accent="next trip." description="Choose your destination, dates and preferences. We’ll send a personalised quote." destinationId={inspiration.id} />
+
+                <section aria-labelledby="enquiry-trending-title" className="max-w-6xl mx-auto mb-8">
+                    <div className="enquiry-inspiration-heading"><div><p className="editorial-eyebrow">Choose your starting idea</p><h2 id="enquiry-trending-title" className="text-xl md:text-2xl font-bold">Trending destinations</h2></div><p>Pick a place, then make it yours.</p></div>
+                    <TrendingTripPicker selected={form.destination} onSelect={name => update('destination', name)} />
+                </section>
 
                 <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] gap-6 lg:gap-8 max-w-6xl mx-auto items-start">
                     <aside className="order-2 lg:order-1 space-y-5">
                         {status !== 'success' && <div className="rounded-3xl border border-orange-200 bg-white p-6 relative">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-4">Your boarding pass to possibility</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-4">Trip summary</p>
                             <p className="text-2xl font-black text-slate-900 break-words mb-4">{form.destination || 'Somewhere wonderful'}</p>
                             <div className="border-y border-dashed border-orange-200 py-4 grid grid-cols-2 gap-4"><div><p className="text-[9px] uppercase tracking-widest text-slate-400 mb-1">Departing from</p><p className="text-sm font-bold break-words">{form.startingPoint || 'Your hometown'}</p></div><div><p className="text-[9px] uppercase tracking-widest text-slate-400 mb-1">The crew</p><p className="text-sm font-bold">{form.people || '—'} travellers</p></div></div>
-                            <p className="mt-4 text-xs text-slate-500 flex items-center gap-2"><Plane className="h-4 w-4 text-primary" />A little preview, not a booking.</p>
+                            <p className="mt-4 text-xs text-slate-500 flex items-center gap-2"><Plane className="h-4 w-4 text-primary" />Enquiry only — no payment required.</p>
                         </div>}
-                        <div className="rounded-3xl bg-slate-900 text-white p-6 md:p-7 relative overflow-hidden">
-                            <Plane className="absolute -right-5 -top-5 h-28 w-28 text-white/5 rotate-12" aria-hidden="true" />
-                            <p className="text-orange-300 text-xs uppercase tracking-widest font-bold mb-3">The next chapter</p>
-                            <h2 className="text-2xl text-white font-bold mb-6">From wish list<br />to take-off.</h2>
-                            <ol className="space-y-6">
-                                {[
-                                    ['Share your ideas', 'Your destination, dates and travel style.'],
-                                    ['Make it personal', 'Our team shapes your custom itinerary.'],
-                                    ['Enjoy the journey', 'We take care of the details along the way.'],
-                                ].map(([title, detail], index) => (
-                                    <li key={title} className="flex items-start gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-orange-300/40 text-xs text-orange-300 font-bold">{index + 1}</span><div><p className="font-semibold text-sm mb-1">{title}</p><p className="text-xs leading-relaxed text-slate-400">{detail}</p></div></li>
-                                ))}
-                            </ol>
-                        </div>
-                        <div className="flex items-start gap-3 rounded-2xl bg-orange-50 border border-orange-200 p-5"><ShieldCheck className="h-5 w-5 shrink-0 text-primary" /><p className="text-xs leading-relaxed text-slate-600">Your details stay private and are only used to plan your trip. No pressure, just possibilities.</p></div>
+                        <div className="flex items-start gap-3 rounded-2xl bg-orange-50 border border-orange-200 p-5"><ShieldCheck className="h-5 w-5 shrink-0 text-primary" /><p className="text-xs leading-relaxed text-slate-600">Your details are only used to plan your trip.</p></div>
                     </aside>
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
@@ -457,6 +462,7 @@ const Enquiry = () => {
                                                     id="enquiry-start-date"
                                                     required
                                                     type="date"
+                                                    min={minStart}
                                                     className={inputClasses}
                                                     value={form.tripStart}
                                                     onChange={(e) => update('tripStart', e.target.value)}
@@ -471,6 +477,7 @@ const Enquiry = () => {
                                                     id="enquiry-end-date"
                                                     required
                                                     type="date"
+                                                    min={form.tripStart && form.tripStart >= minStart ? form.tripStart : minStart}
                                                     className={inputClasses}
                                                     value={form.tripEnd}
                                                     onChange={(e) => update('tripEnd', e.target.value)}
@@ -480,10 +487,13 @@ const Enquiry = () => {
                                         </div>
                                     </div>
 
-                                    <h3 className="flex items-center gap-3 border-t border-slate-100 pt-6 text-base font-bold"><span className="rounded-lg bg-orange-50 px-2.5 py-1.5 text-xs text-primary">03</span> Make it your kind of trip</h3>
+                                    <p role="status" data-trip-duration className="text-sm font-bold text-primary">{nights !== null ? `${nights} ${nights === 1 ? 'night' : 'nights'} / ${nights + 1} ${nights === 0 ? 'day' : 'days'}` : 'Select both dates to see your trip duration.'}</p>
+                                    <h3 className="flex items-center gap-3 border-t border-slate-100 pt-6 text-base font-bold"><span className="rounded-lg bg-orange-50 px-2.5 py-1.5 text-xs text-primary">03</span> Travel preferences</h3>
                                     <div>
                                         <p className={labelClasses}>Transportation Preferences *</p>
                                         <IconPillGroup options={transportOptions} icons={transportIcons} value={form.transport} onChange={(v) => update('transport', v)} />
+                                        <p className="text-xs text-slate-500 mt-3">{manualTransport ? 'Your transport preference is selected.' : 'Suggested for your group: 1–7 car, 8–21 van, 22+ bus. You can choose another option.'}</p>
+                                        {manualTransport && <button type="button" className="min-h-11 text-xs text-primary font-bold underline" onClick={() => { setManualTransport(false); setForm(f => ({ ...f, transport: suggestedTransport(f.people) })); }}>Use automatic suggestion</button>}
                                     </div>
 
                                     <div>
@@ -565,6 +575,13 @@ const Enquiry = () => {
             </div>
         </div>
     );
+};
+
+const Enquiry = () => {
+    const [params] = useSearchParams();
+    const requested = params.get('destination') || '';
+    const destinationName = destinations.find(destination => destination.id === requested)?.name || requested;
+    return <EnquiryForm key={requested} destinationName={destinationName} />;
 };
 
 export default Enquiry;

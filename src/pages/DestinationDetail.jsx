@@ -1,20 +1,39 @@
-import React, { useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { destinations } from '../data/destinations';
 import ItineraryList from '../components/ItineraryList';
 import AttractionsList from '../components/AttractionsList';
-import { ArrowLeft, Clock, Calendar, Wallet, CheckCircle2, XCircle, Info, Star, ShieldCheck, Zap, ChevronRight, MessageCircle, Compass, ListChecks, Sparkles } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, Wallet, CheckCircle2, XCircle, Info, Star, ChevronRight, Compass, ListChecks, Sparkles } from 'lucide-react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+
+const sections = [
+    { id: 'overview', label: 'Overview', icon: Info },
+    { id: 'itinerary', label: 'Itinerary', icon: Compass },
+    { id: 'inclusions', label: 'Inclusions', icon: ListChecks },
+    { id: 'attractions', label: 'Attractions', icon: Sparkles },
+];
+const sectionStyle = { scrollMarginTop: 'var(--detail-scroll-offset, calc(var(--site-header-height) + 96px))' };
 
 const DestinationDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const destination = destinations.find(d => d.id === id);
+    const savedSearch = typeof location.state?.destinationsSearch === 'string'
+        ? location.state.destinationsSearch : location.search;
+    // Only carry collection parameters; back always stays on this site.
+    const returnParams = new URLSearchParams();
+    const savedParams = new URLSearchParams(savedSearch);
+    ['category', 'region', 'search', 'page'].forEach(key => {
+        if (savedParams.has(key)) returnParams.set(key, savedParams.get(key));
+    });
+    const backTo = `/destinations${returnParams.size ? `?${returnParams.toString()}` : ''}`;
+    const enquiryTo = `/enquiry?destination=${encodeURIComponent(id)}`;
+    const pageRef = useRef(null);
+    const toolbarRef = useRef(null);
+    const [activeSection, setActiveSection] = useState('overview');
 
-    // Scope the parallax scroll tracking to just the hero element (not the
-    // whole page). This avoids recalculating transforms on every scroll
-    // frame across the entire document, which was causing jank/slowness
-    // when scrolling through the long itinerary content below.
+    // Keep parallax tracking scoped to the hero.
     const heroRef = useRef(null);
     const { scrollYProgress } = useScroll({
         target: heroRef,
@@ -29,17 +48,73 @@ const DestinationDetail = () => {
         window.scrollTo(0, 0);
     }, [id]);
 
+    useEffect(() => {
+        if (!destination) return;
+        const toolbar = toolbarRef.current;
+        const header = document.querySelector('.site-header');
+        const targets = sections.map(section => document.getElementById(section.id));
+        let offset = 0;
+        let frame;
+        const updateActive = () => {
+            frame = undefined;
+            const ordered = targets.map(target => ({ id: target.id, top: target.getBoundingClientRect().top }))
+                .sort((a, b) => a.top - b.top);
+            const passed = ordered.filter(target => target.top <= offset + 1);
+            setActiveSection((passed.at(-1) || ordered[0]).id);
+        };
+        const scheduleUpdate = () => {
+            if (frame === undefined) frame = window.requestAnimationFrame(updateActive);
+        };
+        const measure = () => {
+            if (!pageRef.current || !toolbar.isConnected) return;
+            const headerBottom = header?.getBoundingClientRect().bottom || 88;
+            toolbar.style.top = `${headerBottom}px`;
+            offset = headerBottom + toolbar.getBoundingClientRect().height + 16;
+            pageRef.current.style.setProperty('--detail-scroll-offset', `${offset}px`);
+            scheduleUpdate();
+        };
+        const observer = new ResizeObserver(measure);
+        observer.observe(toolbar);
+        if (header) observer.observe(header);
+        targets.forEach(target => observer.observe(target));
+        measure();
+        window.addEventListener('scroll', scheduleUpdate, { passive: true });
+        window.addEventListener('resize', measure);
+        // Support direct section links after the header and toolbar are measured.
+        const initialTarget = targets.find(target => `#${target.id}` === window.location.hash);
+        const hashFrame = window.requestAnimationFrame(() => initialTarget?.scrollIntoView({ block: 'start', behavior: 'instant' }));
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('scroll', scheduleUpdate);
+            window.removeEventListener('resize', measure);
+            window.cancelAnimationFrame(frame);
+            window.cancelAnimationFrame(hashFrame);
+        };
+    }, [id, destination]);
+
+    const jumpToSection = (event, sectionId) => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        const target = document.getElementById(sectionId);
+        target?.focus({ preventScroll: true });
+        target?.scrollIntoView({ block: 'start', behavior: 'instant' });
+        setActiveSection(sectionId);
+        navigate({ pathname: location.pathname, search: location.search, hash: `#${sectionId}` }, {
+            replace: true, state: location.state, preventScrollReset: true,
+        });
+    };
+
     if (!destination) {
         return (
             <div className="pt-32 text-center bg-background min-h-screen">
                 <h2 className="text-2xl font-bold mb-4">Destination Not Found</h2>
-                <Link to="/destinations" className="text-primary hover:underline">Back to Destinations</Link>
+                <Link to={backTo} className="text-primary hover:underline">Back to destinations</Link>
             </div>
         );
     }
 
     return (
-        <div className="destination-detail min-h-screen bg-background pb-24 md:pb-20 overflow-x-clip">
+        <div ref={pageRef} className="destination-detail min-h-screen bg-background pb-24 md:pb-20 overflow-x-clip">
             {/* Hero Header */}
             <div ref={heroRef} className="relative h-[70svh] md:h-[75vh] w-full overflow-hidden bg-slate-950">
                 <motion.div
@@ -57,24 +132,22 @@ const DestinationDetail = () => {
                     <div className="absolute top-0 inset-x-0 h-40 md:h-56 bg-gradient-to-b from-black/70 to-transparent"></div>
                 </motion.div>
 
-                {/* Breadcrumb + Back Bar — uses the same top offset as every other page's
-                    content wrapper (pt-28 md:pt-40) so it reliably clears the fixed navbar
-                    at every breakpoint, instead of guessing a shorter custom value. */}
+                {/* Back and breadcrumbs */}
                 <div className="relative z-40 pt-28 md:pt-40 px-4 md:px-12">
                     <div className="container !px-0 flex items-center gap-3">
-                        <button
-                            onClick={() => navigate(-1)}
-                            aria-label="Go back"
+                        <Link
+                            to={backTo}
+                            aria-label="Back to destinations"
                             className="shrink-0 bg-white/15 backdrop-blur-xl p-2.5 md:p-3 rounded-full border border-white/30 text-white hover:bg-white/25 active:scale-95 transition-all flex items-center justify-center group shadow-lg"
                         >
                             <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 group-hover:-translate-x-0.5 transition-transform" />
-                        </button>
-                        <nav className="flex items-center gap-1.5 text-[11px] md:text-sm font-semibold text-white/70 overflow-hidden">
+                        </Link>
+                        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[11px] md:text-sm font-semibold text-white/70 overflow-hidden">
                             <Link to="/" className="hover:text-white transition-colors shrink-0">Home</Link>
                             <ChevronRight className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0" />
-                            <Link to="/destinations" className="hover:text-white transition-colors shrink-0">Destinations</Link>
+                            <Link to={backTo} className="hover:text-white transition-colors shrink-0">Destinations</Link>
                             <ChevronRight className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0" />
-                            <span className="text-white truncate">{destination.name}</span>
+                            <span aria-current="page" className="text-white truncate">{destination.name}</span>
                         </nav>
                     </div>
                 </div>
@@ -89,8 +162,8 @@ const DestinationDetail = () => {
                         transition={{ delay: 0.2 }}
                         className="mb-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold tracking-[0.2em] uppercase"
                     >
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        Top Rated Destination
+                        <Compass className="w-3 h-3" />
+                        {destination.category}
                     </motion.div>
                     <motion.h1
                         initial={{ opacity: 0, y: 30 }}
@@ -100,31 +173,20 @@ const DestinationDetail = () => {
                     >
                         {destination.name}
                     </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="text-lg md:text-2xl lg:text-3xl font-medium text-white/90 drop-shadow-lg italic font-serif max-w-3xl"
-                    >
-                        "{destination.tagline}"
-                    </motion.p>
                 </motion.div>
             </div>
 
-            {/* Sticky Section Tabs — quick-jump navigation for long content */}
-            <div className="detail-section-toolbar sticky z-40 bg-white/95 backdrop-blur-lg border-b border-slate-200 shadow-sm">
+            {/* Section navigation */}
+            <div ref={toolbarRef} className="detail-section-toolbar sticky z-40 bg-white/95 backdrop-blur-lg border-b border-slate-200 shadow-sm">
                 <div className="container">
                     <nav aria-label="Destination sections" className="flex items-center gap-1 md:gap-2 overflow-x-auto no-scrollbar py-3 px-1">
-                        {[
-                            { href: '#overview', label: 'Overview', icon: Info },
-                            { href: '#itinerary', label: 'Itinerary', icon: Compass },
-                            { href: '#inclusions', label: 'Inclusions', icon: ListChecks },
-                            { href: '#attractions', label: 'Attractions', icon: Sparkles },
-                        ].map((tab) => (
+                        {sections.map((tab) => (
                             <a
-                                key={tab.href}
-                                href={tab.href}
-                                className="shrink-0 min-h-11 flex items-center gap-1.5 px-3.5 md:px-5 py-2 rounded-full text-xs md:text-sm font-bold text-slate-600 hover:text-primary hover:bg-primary/5 transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-primary"
+                                key={tab.id}
+                                href={`#${tab.id}`}
+                                aria-current={activeSection === tab.id ? 'location' : undefined}
+                                onClick={event => jumpToSection(event, tab.id)}
+                                className={`shrink-0 min-h-11 flex items-center gap-1.5 px-3.5 md:px-5 py-2 rounded-full text-xs md:text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-primary ${activeSection === tab.id ? 'text-primary bg-primary/10' : 'text-slate-600'}`}
                             >
                                 <tab.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                 {tab.label}
@@ -136,7 +198,7 @@ const DestinationDetail = () => {
 
             <div className="container pt-6 md:pt-10 relative z-20">
                 <div className="bg-white rounded-[2rem] shadow-2xl p-5 sm:p-6 md:p-12 border border-slate-100/50">
-                    {/* Quick Info Strip — vivid gradient badges for an instantly scannable, premium feel */}
+                    {/* Trip summary */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 pb-10 md:pb-12 mb-10 md:mb-12 border-b border-slate-100">
                         <div className="relative p-4 md:p-5 rounded-2xl bg-gradient-to-br from-orange-50 to-white border border-orange-100 flex flex-col gap-2 md:gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all overflow-hidden">
                             <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-primary to-orange-400 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
@@ -161,17 +223,17 @@ const DestinationDetail = () => {
                                 <Wallet className="w-5 h-5 md:w-6 md:h-6 text-white" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-slate-400 text-[9px] md:text-[10px] uppercase font-black tracking-wider">Starting</p>
-                                <p className="font-black text-sm md:text-lg text-slate-900 truncate">{destination.price}</p>
+                                <p className="text-slate-400 text-[9px] md:text-[10px] uppercase font-black tracking-wider">Pricing</p>
+                                <p className="font-black text-sm md:text-lg text-slate-900">Request a quote</p>
                             </div>
                         </div>
                         <div className="relative p-4 md:p-5 rounded-2xl bg-gradient-to-br from-amber-50 to-white border border-amber-100 flex flex-col gap-2 md:gap-3 hover:shadow-lg hover:-translate-y-0.5 transition-all overflow-hidden">
                             <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-500 to-orange-400 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
-                                <ShieldCheck className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                                <Compass className="w-5 h-5 md:w-6 md:h-6 text-white" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-slate-400 text-[9px] md:text-[10px] uppercase font-black tracking-wider">Verified</p>
-                                <p className="font-black text-sm md:text-lg text-slate-900 truncate">TE Certified</p>
+                                <p className="text-slate-400 text-[9px] md:text-[10px] uppercase font-black tracking-wider">Category</p>
+                                <p className="font-black text-sm md:text-lg text-slate-900 truncate">{destination.category}</p>
                             </div>
                         </div>
                     </div>
@@ -180,7 +242,7 @@ const DestinationDetail = () => {
                         {/* Left Content */}
                         <div className="lg:col-span-2 space-y-10">
                             {/* About */}
-                            <section id="overview" className="scroll-mt-32">
+                            <section id="overview" tabIndex={-1} style={sectionStyle} className="scroll-mt-32 focus-visible:outline-2 focus-visible:outline-primary">
                                 <div className="flex items-center gap-3 mb-5">
                                     <div className="w-10 h-1 bg-primary rounded-full"></div>
                                     <h2 className="text-sm font-black uppercase tracking-[0.2em] text-primary">Overview</h2>
@@ -192,7 +254,7 @@ const DestinationDetail = () => {
                             </section>
 
                             {/* Itinerary */}
-                            <div id="itinerary" className="scroll-mt-32">
+                            <div id="itinerary" tabIndex={-1} style={sectionStyle} className="scroll-mt-32 focus-visible:outline-2 focus-visible:outline-primary">
                                 {destination.itinerary ? (
                                     <ItineraryList itinerary={destination.itinerary} />
                                 ) : (
@@ -210,7 +272,7 @@ const DestinationDetail = () => {
                             </div>
 
                             {/* Inclusions & Exclusions */}
-                            <div id="inclusions" className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100 scroll-mt-32">
+                            <div id="inclusions" tabIndex={-1} style={sectionStyle} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100 scroll-mt-32 focus-visible:outline-2 focus-visible:outline-primary">
                                 <section className="bg-gradient-to-br from-green-50/70 to-white rounded-2xl border border-green-100 p-6">
                                     <h3 className="text-lg font-black mb-5 text-slate-900 flex items-center gap-2">
                                         <CheckCircle2 className="w-5 h-5 text-green-500" />
@@ -256,8 +318,8 @@ const DestinationDetail = () => {
                         </div>
 
                         <div className="lg:col-span-1 space-y-8">
-                            {/* Booking CTA Widget */}
-                            <div className="detail-booking-panel lg:sticky">
+                            {/* Quote enquiry */}
+                            <div className="detail-booking-panel lg:sticky" style={{ top: 'var(--detail-scroll-offset)' }}>
                                 <motion.div
                                     whileHover={{ y: -5 }}
                                     className="bg-slate-900 rounded-3xl p-7 md:p-8 text-white relative overflow-hidden group shadow-2xl border border-white/10"
@@ -265,32 +327,13 @@ const DestinationDetail = () => {
                                     <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 blur-3xl group-hover:bg-primary/40 transition-colors"></div>
                                     <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-primary via-orange-300 to-primary"></div>
                                     <div className="relative z-10">
-                                        <div className="flex items-center gap-2 text-primary-light font-bold text-xs tracking-widest uppercase mb-4">
-                                            <Zap className="w-4 h-4 fill-primary-light" />
-                                            Trending Destination
-                                        </div>
-                                        <h3 className="text-3xl font-black mb-2 text-white drop-shadow-sm">Live the Episode</h3>
-                                        <p className="text-slate-400 text-sm mb-6">Customized packages for families, couples, and trend-seekers.</p>
-
-                                        {/* Trust strip */}
-                                        <div className="flex items-center gap-4 mb-6 py-3 px-4 bg-white/5 rounded-xl border border-white/10">
-                                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300">
-                                                <ShieldCheck className="w-3.5 h-3.5 text-green-400" /> Secure
-                                            </div>
-                                            <div className="w-px h-3 bg-white/20"></div>
-                                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300">
-                                                <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" /> 4.9 Rated
-                                            </div>
-                                            <div className="w-px h-3 bg-white/20"></div>
-                                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300">
-                                                <Clock className="w-3.5 h-3.5 text-primary-light" /> 24/7
-                                            </div>
-                                        </div>
+                                        <h3 className="text-3xl font-black mb-2 text-white drop-shadow-sm">Plan your trip</h3>
+                                        <p className="text-slate-400 text-sm mb-6">Share your dates and preferences for a personalised quote.</p>
 
                                         <div className="space-y-4 mb-8">
                                             <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3">
-                                                <span className="text-slate-400">Standard Pack</span>
-                                                <span className="font-bold">{destination.price}</span>
+                                                <span className="text-slate-400">Pricing</span>
+                                                <span className="font-bold">Request a quote</span>
                                             </div>
                                             <div className="flex justify-between items-center text-sm border-b border-white/10 pb-3">
                                                 <span className="text-slate-400">Duration</span>
@@ -298,49 +341,39 @@ const DestinationDetail = () => {
                                             </div>
                                         </div>
 
-                                        <Link to="/enquiry" className="btn btn-primary w-full py-5 text-lg font-black rounded-2xl shadow-lg hover:shadow-primary/20 flex items-center justify-center gap-2 group/btn mb-4">
-                                            Book Now
+                                        <Link to={enquiryTo} className="btn btn-primary w-full py-5 text-lg font-black rounded-2xl shadow-lg hover:shadow-primary/20 flex items-center justify-center gap-2 group/btn mb-4">
+                                            Get a quote
                                             <ArrowLeft className="w-5 h-5 rotate-180 group-hover/btn:translate-x-1 transition-transform" />
                                         </Link>
 
-                                        <Link to="/contact" className="block text-slate-400 text-xs text-center border border-white/10 py-3 rounded-xl hover:bg-white/5 transition-colors">
-                                            Need Help? Talk to an Expert
+                                        <Link to={enquiryTo} className="block text-slate-400 text-xs text-center border border-white/10 py-3 rounded-xl hover:bg-white/5 transition-colors">
+                                            Ask about this trip
                                         </Link>
                                     </div>
                                 </motion.div>
+                            </div>
 
-                                <div id="attractions" className="mt-8 p-6 bg-gradient-to-br from-amber-50/70 to-white rounded-2xl border border-amber-100 scroll-mt-32">
-                                    <h4 className="font-black text-slate-900 mb-4 flex items-center gap-2">
-                                        <Star className="w-4 h-4 fill-orange-400 text-orange-400" />
-                                        Top Attractions
-                                    </h4>
-                                    <AttractionsList attractions={destination.attractions} />
-                                </div>
+                            <div id="attractions" tabIndex={-1} style={sectionStyle} className="mt-8 p-6 bg-gradient-to-br from-amber-50/70 to-white rounded-2xl border border-amber-100 scroll-mt-32 focus-visible:outline-2 focus-visible:outline-primary">
+                                <h2 className="font-black text-slate-900 mb-4 flex items-center gap-2">
+                                    <Star className="w-4 h-4 fill-orange-400 text-orange-400" />
+                                    Attractions
+                                </h2>
+                                <AttractionsList attractions={destination.attractions} />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Mobile Sticky Bottom CTA — the sidebar booking card isn't reachable
-                without a long scroll on small screens, so mirror its key action here. */}
+            {/* Mobile quote enquiry */}
             <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-lg border-t border-slate-200 px-4 py-3 flex items-center gap-3 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
                 <div className="min-w-0">
-                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Starting at</p>
-                    <p className="font-black text-lg text-slate-900 truncate">{destination.price}</p>
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Pricing</p>
+                    <p className="font-black text-sm text-slate-900">Request a quote</p>
                 </div>
-                <Link to="/enquiry" className="btn btn-primary flex-1 py-3 text-sm font-black rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
-                    Book Now <ArrowLeft className="w-4 h-4 rotate-180" />
+                <Link to={enquiryTo} className="btn btn-primary flex-1 py-3 text-sm font-black rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                    Get a quote <ArrowLeft className="w-4 h-4 rotate-180" />
                 </Link>
-                <a
-                    href="https://wa.me/919841844977"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Chat on WhatsApp"
-                    className="shrink-0 p-3 rounded-xl bg-green-500 text-white hover:bg-green-600 transition-colors"
-                >
-                    <MessageCircle className="w-5 h-5" />
-                </a>
             </div>
         </div>
     );

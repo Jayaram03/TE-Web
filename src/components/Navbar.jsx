@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ArrowUpRight, Compass, Plane, X } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion, useScroll } from 'framer-motion';
 import useMobileMotion from './useMobileMotion';
+import ThemeToggle from './ThemeToggle';
 
 const navLinks = [
   { name: 'Home', path: '/', note: 'Where your next chapter begins' },
@@ -90,8 +91,8 @@ const Navbar = () => {
       <header ref={navRef} className="site-header fixed inset-x-0 top-0 z-[100] px-3 md:px-6 pt-2 pb-2">
         <div className={`site-nav-shell mx-auto max-w-7xl rounded-2xl md:rounded-full border transition-colors duration-300 ${isTransparent ? 'bg-slate-900/65 border-white/15 text-white' : 'bg-white/95 border-slate-200 text-slate-900 shadow-lg shadow-slate-900/5'}`}>
           <nav aria-label="Main navigation" className="flex items-center justify-between h-full px-3 md:px-5 gap-3">
-            <Link to="/" aria-label="Travel Episodes home" className="shrink-0">
-              <img src="/logo-header.png" alt="Travel Episodes" width="512" height="176" className="w-36 sm:w-40 lg:w-48 h-auto max-h-16 object-contain" />
+            <Link to="/" aria-label="Travel Episodes home" className="site-nav-logo shrink-0">
+              <img src="/logo-header.png" alt="Travel Episodes" width="512" height="176" className="w-36 sm:w-40 md:w-32 lg:w-48 h-auto max-h-16 object-contain" />
             </Link>
             <div className="hidden md:flex items-center gap-1">
               {navLinks.map(link => (
@@ -106,26 +107,29 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
-            <Link to="/enquiry" className="hidden md:inline-flex btn btn-primary rounded-full gap-2 text-sm px-4">
+            <Link to="/enquiry" className="hidden lg:inline-flex btn btn-primary rounded-full gap-2 text-sm px-4">
               Let’s take off <ArrowUpRight className="h-4 w-4" />
             </Link>
-            <button
-              type="button"
-              aria-label={isOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={isOpen}
-              aria-controls="mobile-navigation"
-              onClick={() => {
-                if (isOpen) closeMenu();
-                else { setMenuMounted(true); setOpenPath(location.key); }
-              }}
-              className="md:hidden flex min-h-11 items-center gap-3 rounded-full px-4 border border-current/15 text-xs font-bold"
-            >
-              <span>{isOpen ? 'Close' : 'Explore'}</span>
-              <span className="relative w-5 h-4" aria-hidden="true">
-                <motion.span className="absolute top-1 left-0 h-px w-5 bg-current" animate={{ y: isOpen ? 3 : 0, rotate: isOpen ? 45 : 0 }} transition={transition} />
-                <motion.span className="absolute bottom-1 left-0 h-px w-5 bg-current" animate={{ y: isOpen ? -3 : 0, rotate: isOpen ? -45 : 0 }} transition={transition} />
-              </span>
-            </button>
+            <div className="site-nav-actions ml-auto md:ml-0 flex shrink-0 items-center gap-2">
+              <ThemeToggle />
+              <button
+                type="button"
+                aria-label={isOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isOpen}
+                aria-controls="mobile-navigation"
+                onClick={() => {
+                  if (isOpen) closeMenu();
+                  else { setMenuMounted(true); setOpenPath(location.key); }
+                }}
+                className="site-menu-button md:hidden flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-3 rounded-full px-4 border border-current/15 text-xs font-bold"
+              >
+                <span className="site-menu-label">{isOpen ? 'Close' : 'Explore'}</span>
+                <span className="relative w-5 h-4" aria-hidden="true">
+                  <motion.span className="absolute top-1 left-0 h-px w-5 bg-current" animate={{ y: isOpen ? 3 : 0, rotate: isOpen ? 45 : 0 }} transition={transition} />
+                  <motion.span className="absolute bottom-1 left-0 h-px w-5 bg-current" animate={{ y: isOpen ? -3 : 0, rotate: isOpen ? -45 : 0 }} transition={transition} />
+                </span>
+              </button>
+            </div>
           </nav>
           {!reducedMotion && (
             <div className="absolute bottom-0 inset-x-8 h-px overflow-hidden" aria-hidden="true">
@@ -189,6 +193,7 @@ const Navbar = () => {
                 ))}
               </nav>
               <div className="relative mt-auto">
+                <div className="mb-5 flex justify-center"><ThemeToggle showLabel /></div>
                 <Link to="/enquiry" onClick={closeMenu} className="btn btn-primary w-full gap-3 py-4 rounded-2xl">
                   Make it your kind of trip <Plane className="h-4 w-4" />
                 </Link>

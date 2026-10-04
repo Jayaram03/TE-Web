@@ -1,0 +1,397 @@
+.destination-filters {
+    position: relative;
+    z-index: 50;
+    margin-bottom: 28px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--panel-bg);
+    color: var(--ink);
+}
+
+.destination-filter-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.destination-category-switch {
+    display: flex;
+    padding: 4px;
+    border-radius: 12px;
+    background: var(--quiet-bg);
+    gap: 3px;
+}
+
+.destination-category-switch button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border-radius: 9px;
+    color: var(--muted-ink);
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.destination-category-switch button[aria-pressed="true"] {
+    background: var(--panel-bg);
+    color: var(--theme-accent);
+    box-shadow: 0 2px 6px #0000000a;
+}
+
+.destination-category-switch button span {
+    font-size: 10px;
+    font-weight: 500;
+    opacity: .8;
+}
+
+.destination-filter-total {
+    color: var(--muted-ink);
+    font-size: 12px;
+}
+
+.destination-filter-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 260px);
+    gap: 10px;
+}
+
+.destination-search {
+    display: flex;
+    align-items: center;
+    position: relative;
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: var(--page-bg);
+}
+
+.destination-search>svg {
+    position: absolute;
+    left: 14px;
+    color: var(--theme-accent);
+    pointer-events: none;
+}
+
+.destination-search input {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    background: transparent;
+    border: 0;
+    border-radius: inherit;
+    color: var(--ink);
+    font-size: 14px;
+    padding: 12px 42px;
+}
+
+.destination-search input::placeholder {
+    color: var(--muted-ink);
+}
+
+.destination-search input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.destination-search button {
+    position: absolute;
+    right: 3px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 9px;
+    color: var(--muted-ink);
+    cursor: pointer;
+}
+
+.destination-region-picker {
+    position: relative;
+    min-width: 0;
+}
+
+.destination-region-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 50px;
+    padding: 7px 13px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: var(--page-bg);
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+}
+
+.destination-region-trigger>svg:first-child,
+.destination-region-heading>svg {
+    color: var(--theme-accent);
+    flex-shrink: 0;
+}
+
+.destination-region-trigger>svg:last-child {
+    flex-shrink: 0;
+    color: var(--muted-ink);
+    transition: transform .18s ease;
+}
+
+.destination-region-trigger[aria-expanded="true"]>svg:last-child {
+    transform: rotate(180deg);
+}
+
+.destination-region-copy {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    gap: 2px;
+}
+
+.destination-region-subtitle {
+    color: var(--muted-ink);
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+.destination-region-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.4;
+}
+
+.destination-region-popover {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 50;
+    width: 100%;
+    max-height: var(--picker-available-height, 400px);
+    overflow: hidden;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--panel-bg);
+    color: var(--ink);
+    box-shadow: 0 16px 40px #00000026, 0 4px 12px #00000012;
+}
+
+.destination-region-popover[data-side="above"] {
+    top: auto;
+    bottom: calc(100% + 8px);
+}
+
+.destination-region-heading,
+.destination-region-search {
+    flex-shrink: 0;
+}
+
+.destination-region-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 6px 11px;
+    color: var(--muted-ink);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.destination-region-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+    padding-inline: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--page-bg);
+    color: var(--muted-ink);
+}
+
+.destination-region-search>svg {
+    flex-shrink: 0;
+}
+
+.destination-region-search input {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink);
+    font-size: 14px;
+    outline: none;
+    box-shadow: none;
+}
+
+/* Focus belongs to the whole search field, not a permanent inner rectangle.
+   Pointer opening leaves this input unfocused; keyboard focus remains visible. */
+.destination-filters .destination-region-search input:focus-visible {
+    outline: none;
+}
+
+.destination-region-search:has(input:focus-visible) {
+    border-color: var(--theme-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-accent) 15%, transparent);
+}
+
+.destination-region-search input::placeholder {
+    color: var(--muted-ink);
+}
+
+.destination-region-options {
+    display: grid;
+    flex: 0 1 auto;
+    min-height: 0;
+    gap: 3px;
+    max-height: 280px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+    padding: 3px;
+}
+
+.destination-region-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 9px;
+    border-radius: 10px;
+    color: var(--ink);
+    text-align: left;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.destination-region-option:hover,
+.destination-region-option:focus-visible {
+    background: var(--quiet-bg);
+}
+
+.destination-region-option[aria-selected="true"] {
+    background: var(--soft-bg);
+    color: var(--theme-accent);
+    font-weight: 650;
+}
+
+.destination-region-option-label {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.destination-region-count {
+    flex-shrink: 0;
+    min-width: 24px;
+    padding: 3px 7px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--panel-bg);
+    color: var(--muted-ink);
+    text-align: center;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.destination-region-check {
+    display: flex;
+    flex-shrink: 0;
+    width: 16px;
+}
+
+.destination-region-empty {
+    padding: 14px 8px;
+    color: var(--muted-ink);
+    font-size: 13px;
+}
+
+.destination-active-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.destination-active-filters button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    max-width: 100%;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--soft-bg);
+    color: var(--theme-accent);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.destination-active-filters button span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.destination-active-filters button svg {
+    flex-shrink: 0;
+}
+
+.destination-active-filters .destination-clear-all {
+    background: transparent;
+    color: var(--muted-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.destination-filters :is(button, input):focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+    .destination-filters {
+        padding: 14px;
+        border-radius: 16px;
+    }
+
+    .destination-filter-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .destination-filter-top {
+        gap: 10px;
+    }
+
+    .destination-category-switch {
+        width: 100%;
+    }
+
+    .destination-category-switch button {
+        flex: 1;
+        padding-inline: 10px;
+        font-size: 12px;
+    }
+
+    .destination-search input,
+    .destination-region-search input {
+        font-size: 16px;
+    }
+}

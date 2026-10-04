@@ -1,20 +1,19 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { destinations } from '../data/destinations';
 import { getMonthlyFeatures } from '../data/monthlyFeatures';
-import { Filter, Search, ArrowUpRight, ArrowLeft, ArrowRight, Compass } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Search, ArrowUpRight, ArrowLeft, ArrowRight, Clock, MapPin, X } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import DestinationCollectionCard from '../components/DestinationCollectionCard';
+import DestinationRegionPicker from '../components/DestinationRegionPicker';
+import './destinationFilters.css';
 
 const Destinations = () => {
-    const [activeTab, setActiveTab] = useState('Domestic');
-    const [selectedState, setSelectedState] = useState('All');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [page, setPage] = useState(1);
+    const [params, setParams] = useSearchParams();
+    const activeTab = params.get('category') === 'International' ? 'International' : 'Domestic';
+    const searchQuery = params.get('search') || '';
     const resultsRef = useRef(null);
     const pageSize = 6;
 
-    // Extract unique regions/states for the filter
     const domesticStates = useMemo(() => {
         const states = destinations
             .filter(d => d.category === 'Domestic')
@@ -30,12 +29,33 @@ const Destinations = () => {
         return ['All', ...new Set(regions)];
     }, []);
 
-    // Filter destinations based on Tab, State/Region, and Search
+    const regions = activeTab === 'Domestic' ? domesticStates : internationalRegions;
+    const categoryDestinations = destinations.filter(destination => destination.category === activeTab);
+    const regionOptions = regions.map(region => ({
+        value: region,
+        label: region === 'All' ? `All ${activeTab === 'Domestic' ? 'states' : 'regions'}` : region,
+        count: region === 'All' ? categoryDestinations.length : categoryDestinations.filter(destination =>
+            (activeTab === 'Domestic' ? destination.state : destination.region) === region).length,
+    }));
+    const selectedState = regions.includes(params.get('region')) ? params.get('region') : 'All';
+    const updateFilters = (changes, replace = false) => {
+        setParams(() => {
+            // Read the current URL so rapid filter/search changes do not use
+            // a previous render's parameters and erase another selection.
+            const next = new URLSearchParams(window.location.search);
+            Object.entries(changes).forEach(([key, value]) => {
+                if (value === '' || value === 'All' || (key === 'page' && value === 1)) next.delete(key);
+                else next.set(key, String(value));
+            });
+            return next;
+        }, { replace });
+    };
+    const resetFilters = () => updateFilters({ region: 'All', search: '', page: 1 });
+
     const filteredDestinations = useMemo(() => {
         return destinations.filter(dest => {
             const matchesCategory = dest.category === activeTab;
 
-            // For Domestic, we filter by 'state'. For International, we filter by 'region'.
             let matchesFilter = true;
             if (activeTab === 'Domestic') {
                 matchesFilter = selectedState === 'All' || dest.state === selectedState;
@@ -53,10 +73,16 @@ const Destinations = () => {
     }, [activeTab, selectedState, searchQuery]);
 
     const pageCount = Math.ceil(filteredDestinations.length / pageSize);
+    const requestedPage = Number(params.get('page') || 1);
+    const page = Number.isSafeInteger(requestedPage) && requestedPage > 0
+        ? Math.min(requestedPage, Math.max(1, pageCount)) : 1;
     const visibleDestinations = filteredDestinations.slice((page - 1) * pageSize, page * pageSize);
     const cover = getMonthlyFeatures().editor[activeTab];
+    const collectionParams = new URLSearchParams({ category: activeTab, region: selectedState, search: searchQuery, page: String(page) });
+    const collectionSearch = `?${collectionParams.toString()}`;
+    const detailLink = destination => `/destinations/${destination.id}${collectionSearch}`;
     const changePage = next => {
-        setPage(next);
+        updateFilters({ page: next });
         resultsRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
         resultsRef.current?.focus({ preventScroll: true });
     };
@@ -66,85 +92,56 @@ const Destinations = () => {
             <div className="container px-4 relative z-10">
                 <header className="grid lg:grid-cols-[1fr_1.2fr] mb-8 rounded-3xl overflow-hidden bg-slate-900">
                     <div className="p-6 md:p-10 lg:p-12 flex flex-col justify-center">
-                        <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-orange-300 mb-5"><Compass className="h-4 w-4" /> The destination edit</p>
-                        <h1 className="text-4xl md:text-6xl text-white leading-[1.02] tracking-tight mb-4">A world of places.<br /><span className="text-orange-300">One perfect escape.</span></h1>
-                        <p className="text-sm md:text-base text-slate-300 leading-relaxed max-w-md mb-6">Browse a few great ideas at a time. Find your favourite, explore the details, then let us make it yours.</p>
-                        <p className="text-xs text-slate-400">{destinations.length} destinations / curated for your next chapter</p>
+                        <h1 className="text-4xl md:text-6xl text-white leading-[1.02] tracking-tight mb-4">Destinations</h1>
+                        <p className="text-sm md:text-base text-slate-300 leading-relaxed max-w-md mb-6">Search destinations, compare itineraries and request a quote.</p>
+                        <p className="text-xs text-slate-400">{destinations.length} destinations</p>
                     </div>
-                    <Link to={`/destinations/${cover.id}`} className="relative min-h-56 md:min-h-80 group overflow-hidden">
+                    <Link to={detailLink(cover)} state={{ destinationsSearch: collectionSearch }} className="relative min-h-56 md:min-h-80 group overflow-hidden">
                         <img src={cover.image} alt={cover.name} width="720" height="440" decoding="async" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                         <div className="absolute inset-0 bg-linear-to-t from-slate-950/80 via-transparent to-transparent" />
-                        <span className="absolute top-5 left-5 bg-white/90 text-slate-800 rounded-full text-xs font-bold px-3 py-2">This month’s editor’s pick</span>
-                        <div className="absolute bottom-6 inset-x-6 text-white flex justify-between items-end gap-4"><div><p className="text-xs text-white/70 mb-2">{activeTab === 'Domestic' ? 'Closer to home. Far from ordinary.' : 'Your next passport memory.'}</p><p className="font-black text-3xl md:text-4xl">{cover.name}</p></div><ArrowUpRight className="h-7 w-7 shrink-0" /></div>
+                        <span className="absolute top-5 left-5 bg-white/90 text-slate-800 rounded-full text-xs font-bold px-3 py-2">Featured this month</span>
+                        <div className="absolute bottom-6 inset-x-6 text-white flex justify-between items-end gap-4"><p className="font-black text-3xl md:text-4xl">{cover.name}</p><ArrowUpRight className="h-7 w-7 shrink-0" /></div>
                     </Link>
                 </header>
 
                 {/* Discovery Controls */}
-                <div className="space-y-5 mb-8 p-4 md:p-6 rounded-3xl bg-white border border-slate-200 shadow-sm">
-                    {/* Search Bar */}
-                    <div className="relative group">
-                        <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-                            <Search className="w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                <section aria-label="Filter destinations" className="destination-filters">
+                    <div className="destination-filter-top">
+                        <div className="destination-category-switch" role="group" aria-label="Destination category">
+                            {['Domestic', 'International'].map(tab => <button key={tab} type="button" aria-pressed={activeTab === tab} onClick={() => updateFilters({ category: tab, region: 'All', page: 1 })}>{tab}<span aria-hidden="true">{destinations.filter(destination => destination.category === tab).length}</span></button>)}
                         </div>
-                        <input
-                            type="text"
-                            aria-label="Search destinations by name, state or region"
-                            placeholder="Search by destination, state, or region..."
-                            value={searchQuery}
-                            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-                            className="w-full pl-14 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-base font-medium placeholder:text-slate-400"
+                        <span className="destination-filter-total" role="status">{filteredDestinations.length} {filteredDestinations.length === 1 ? 'place' : 'places'} to explore</span>
+                    </div>
+                    <div className="destination-filter-fields">
+                        <div className="destination-search">
+                            <Search size={18} aria-hidden="true" />
+                            <input
+                                type="search"
+                                aria-label="Search destinations by name, state or region"
+                                placeholder="Where would you like to go?"
+                                value={searchQuery}
+                                onChange={(e) => updateFilters({ search: e.target.value, page: 1 }, true)}
+                            />
+                            {searchQuery && <button type="button" aria-label="Clear destination search" onClick={() => updateFilters({ search: '', page: 1 }, true)}><X size={16} /></button>}
+                        </div>
+                        <DestinationRegionPicker
+                            key={activeTab}
+                            label={activeTab === 'Domestic' ? 'State' : 'Region'}
+                            options={regionOptions}
+                            value={selectedState}
+                            onChange={value => updateFilters({ region: value, page: 1 })}
                         />
                     </div>
-
-                    <div className="flex flex-col items-start gap-4 pt-2">
-                        {/* Category Tabs */}
-                        <div className="flex p-1.5 bg-slate-100/50 rounded-2xl border border-slate-200/60 shadow-inner w-full lg:w-auto">
-                            {['Domestic', 'International'].map((tab) => (
-                                <button
-                                    key={tab}
-                                    aria-pressed={activeTab === tab}
-                                    onClick={() => {
-                                        setActiveTab(tab);
-                                        setSelectedState('All');
-                                        setPage(1);
-                                    }}
-                                    className={`flex-1 lg:flex-none px-6 py-2.5 md:px-10 md:py-3.5 rounded-xl text-sm font-black tracking-wide transition-all duration-300 ${activeTab === tab
-                                        ? 'bg-white text-slate-900 shadow-xl border border-slate-200/50 scale-[1.02]'
-                                        : 'text-slate-500 hover:text-slate-800'
-                                        }`}
-                                >
-                                    {tab}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Filters */}
-                        <div className="flex items-center gap-2 w-full overflow-x-auto pb-2 no-scrollbar">
-                            <div className="flex items-center gap-2 px-4 py-2.5 md:px-5 md:py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm text-slate-700 font-bold shrink-0">
-                                <Filter className="w-4 h-4 text-primary" />
-                                <span className="text-xs uppercase tracking-widest text-slate-400">Filter By</span>
-                            </div>
-
-                            {(activeTab === 'Domestic' ? domesticStates : internationalRegions).map(item => (
-                                <button
-                                    key={item}
-                                    aria-pressed={selectedState === item}
-                                    onClick={() => { setSelectedState(item); setPage(1); }}
-                                    className={`min-h-11 px-4 py-2.5 md:px-6 md:py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest border transition-all whitespace-nowrap shrink-0 ${selectedState === item
-                                        ? 'bg-slate-900 border-slate-900 text-white shadow-lg'
-                                        : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400'
-                                        }`}
-                                >
-                                    {item}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                    {(searchQuery || selectedState !== 'All') && <div className="destination-active-filters" aria-label="Active filters">
+                        {selectedState !== 'All' && <button type="button" onClick={() => updateFilters({ region: 'All', page: 1 })} aria-label={`Remove ${selectedState} filter`}>{selectedState}<X size={13} aria-hidden="true" /></button>}
+                        {searchQuery && <button type="button" onClick={() => updateFilters({ search: '', page: 1 }, true)} aria-label="Remove search filter"><span>“{searchQuery}”</span><X size={13} aria-hidden="true" /></button>}
+                        <button type="button" onClick={resetFilters} className="destination-clear-all">Clear all</button>
+                    </div>}
+                </section>
 
                 {/* Grid */}
                 <div ref={resultsRef} tabIndex={-1} className="flex items-center justify-between gap-4 mb-5 scroll-mt-40 focus:outline-none">
-                    <h2 className="text-xl md:text-2xl font-bold">Your {activeTab.toLowerCase()} escapes</h2>
+                    <h2 className="text-xl md:text-2xl font-bold">{activeTab} destinations</h2>
                     <p className="text-xs sm:text-sm text-slate-500 shrink-0" role="status">{filteredDestinations.length ? `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, filteredDestinations.length)} of ${filteredDestinations.length}` : '0 places'}</p>
                 </div>
                 <motion.div
@@ -162,7 +159,18 @@ const Destinations = () => {
                                 transition={{ duration: 0.3 }}
                                 className="h-full"
                             >
-                                <DestinationCollectionCard destination={dest} index={(page - 1) * pageSize + index} />
+                                <Link to={detailLink(dest)} state={{ destinationsSearch: collectionSearch }} className="group grid h-full grid-cols-[104px_minmax(0,1fr)] sm:grid-cols-1 rounded-2xl overflow-hidden border border-slate-200 bg-white hover:border-orange-300 hover:shadow-lg transition-all focus-visible:outline-2 focus-visible:outline-primary">
+                                    <div className="relative h-full min-h-40 sm:h-52 bg-slate-200 overflow-hidden">
+                                        <img src={dest.image} alt={dest.name} loading="lazy" decoding="async" width="400" height="260" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <span className="absolute top-3 left-3 rounded-full bg-white/90 px-2 py-1 text-[10px] font-bold text-slate-700">{String((page - 1) * pageSize + index + 1).padStart(2, '0')}</span>
+                                    </div>
+                                    <div className="p-4 sm:p-5 min-w-0 flex flex-col">
+                                        <p className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-slate-500 mb-2"><MapPin className="h-3 w-3 shrink-0" /><span className="truncate">{dest.state || dest.region}</span></p>
+                                        <h3 className="text-xl sm:text-2xl leading-tight tracking-tight mb-2 group-hover:text-primary transition-colors">{dest.name}</h3>
+                                        <p className="flex items-center gap-1.5 text-xs text-slate-500 mb-3"><Clock className="h-3 w-3 shrink-0" />{dest.duration}</p>
+                                        <div className="mt-auto flex items-end justify-between gap-2"><div><p className="text-[9px] uppercase tracking-widest text-slate-400">Pricing</p><p className="text-sm sm:text-lg font-bold text-primary">Request a quote</p></div><ArrowUpRight className="h-5 w-5 text-slate-400 group-hover:text-primary shrink-0" aria-hidden="true" /></div>
+                                    </div>
+                                </Link>
                             </motion.div>
                         ))}
                     </AnimatePresence>
@@ -184,21 +192,18 @@ const Destinations = () => {
                             <Search className="w-10 h-10" />
                         </div>
                         <h2 className="text-3xl font-black text-slate-900 mb-2">No Destinations Found</h2>
-                        <p className="text-slate-500 mb-8 max-w-md mx-auto">We couldn't find any episodes matching "<span className="text-primary font-bold">{searchQuery}</span>". Try a different search or clear your filters.</p>
+                        <p className="text-slate-500 mb-8 max-w-md mx-auto">No destinations match these filters. Try another search or clear your filters.</p>
                         <button
-                            onClick={() => {
-                                setSearchQuery('');
-                                setSelectedState('All');
-                                setPage(1);
-                            }}
+                            type="button"
+                            onClick={resetFilters}
                             className="btn btn-primary px-10 py-4 shadow-xl shadow-primary/20"
                         >
-                            Reset Discovery
+                            Clear filters
                         </button>
                     </motion.div>
                 )}
                 <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 rounded-3xl bg-slate-900 px-6 py-8 md:p-10 text-white">
-                    <div><p className="text-xl md:text-2xl font-bold mb-2">Somewhere else on your wishlist?</p><p className="text-sm text-slate-300">Tell us your idea. We’ll help you build the journey.</p></div>
+                    <div><p className="text-xl md:text-2xl font-bold mb-2">Need another destination?</p><p className="text-sm text-slate-300">Request a custom itinerary.</p></div>
                     <Link to="/enquiry" className="btn btn-primary shrink-0 gap-2">Plan a custom trip <ArrowUpRight className="h-4 w-4" /></Link>
                 </div>
             </div>

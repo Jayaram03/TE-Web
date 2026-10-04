@@ -1,16 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import useMobileMotion from './useMobileMotion';
 
 // Animate the native scroll position, not a transform, so swipe and autoplay
 // always operate on the same track and cannot fight one another.
-const AutoScrollMarquee = ({ children, label, speed = 50 }) => {
+const AutoScrollMarquee = ({ children, label, speed = 50, paused = false }) => {
     const viewportRef = useRef(null);
     const groupRef = useRef(null);
     const interaction = useRef({ pointer: false, focus: false, until: 0 });
     const lastAutoPosition = useRef(null);
     const reducedMotion = useReducedMotion();
-    const mobile = useMobileMotion();
 
     const pauseTemporarily = () => {
         interaction.current.until = performance.now() + 1100;
@@ -19,7 +17,7 @@ const AutoScrollMarquee = ({ children, label, speed = 50 }) => {
     useEffect(() => {
         const viewport = viewportRef.current;
         const group = groupRef.current;
-        if (!viewport || !group || reducedMotion) return;
+        if (!viewport || !group || reducedMotion || paused) return;
 
         let frame;
         let previousTime = 0;
@@ -27,11 +25,6 @@ const AutoScrollMarquee = ({ children, label, speed = 50 }) => {
         let menuOpen = document.documentElement.dataset.mobileMenuOpen === 'true';
         let position = viewport.scrollLeft;
         let cycleWidth = group.getBoundingClientRect().width;
-        // Prioritize the user's vertical scroll over secondary autoplay work.
-        const onPageScroll = () => {
-            interaction.current.until = Math.max(interaction.current.until, performance.now() + 180);
-        };
-        if (mobile) window.addEventListener('scroll', onPageScroll, { passive: true });
         const sizeObserver = new ResizeObserver(() => {
             cycleWidth = group.getBoundingClientRect().width;
         });
@@ -78,9 +71,8 @@ const AutoScrollMarquee = ({ children, label, speed = 50 }) => {
             visibilityObserver.disconnect();
             document.removeEventListener('mobile-menu-activity', onMenuActivity);
             document.removeEventListener('visibilitychange', syncAnimation);
-            if (mobile) window.removeEventListener('scroll', onPageScroll);
         };
-    }, [reducedMotion, speed, mobile]);
+    }, [reducedMotion, speed, paused]);
 
     return (
         <div>
@@ -103,9 +95,7 @@ const AutoScrollMarquee = ({ children, label, speed = 50 }) => {
                 }}
                 onPointerUp={() => { interaction.current.pointer = false; pauseTemporarily(); }}
                 onPointerCancel={() => { interaction.current.pointer = false; pauseTemporarily(); }}
-                onWheel={(event) => {
-                    if (event.deltaX !== 0 || event.shiftKey) pauseTemporarily();
-                }}
+                onWheel={pauseTemporarily}
                 onKeyDown={pauseTemporarily}
                 onFocusCapture={(event) => {
                     // Touch browsers focus links too; only keyboard focus should

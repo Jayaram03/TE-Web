@@ -11,13 +11,13 @@ const flightStars = Array.from({ length: 40 }, (_, index) => ({
     size: index % 5 === 0 ? 4 : 2,
 }));
 
-const SkyCloud = ({ className }) => {
+const SkyCloud = ({ className, daylight = false }) => {
     const id = useId();
     return (
         <svg className={`flight-cloud ${className}`} viewBox="0 0 400 160" fill="none">
             <defs>
                 <linearGradient id={id} x1="200" y1="15" x2="200" y2="150" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#e2e8f0" stopOpacity="0.34" /><stop offset="0.5" stopColor="#c7d2fe" stopOpacity="0.13" /><stop offset="1" stopColor="#94a3b8" stopOpacity="0" />
+                    <stop stopColor={daylight ? '#ffffff' : '#e2e8f0'} stopOpacity={daylight ? '0.95' : '0.34'} /><stop offset="0.5" stopColor={daylight ? '#ffffff' : '#c7d2fe'} stopOpacity={daylight ? '0.78' : '0.13'} /><stop offset="1" stopColor={daylight ? '#93c5fd' : '#94a3b8'} stopOpacity={daylight ? '0.22' : '0'} />
                 </linearGradient>
             </defs>
             <path d="M12 116C5 94 25 79 49 82C48 52 78 33 110 47C126 6 187 0 217 39C250 21 293 38 299 70C331 58 354 76 351 95C378 91 398 107 389 126C376 151 39 158 12 116Z" fill={`url(#${id})`} />
@@ -42,10 +42,24 @@ const FlightAtmosphere = ({ progress, reducedMotion }) => {
     const nearCloudY = useTransform(progress, [0, 1], [40, -150]);
     const starsY = useTransform(progress, [0, 1], [0, -36]);
     const starsOpacity = useTransform(progress, [0, 0.35, 0.8, 1], [0.4, 0.65, 0.95, 0.85]);
+    const sunY = useTransform(progress, [0, 1], [25, -70]);
+    const sunScale = useTransform(progress, [0, 0.5, 1], [0.9, 1.08, 1]);
+    const daylightOpacity = useTransform(progress, [0, 0.12, 0.45, 1], [0.3, 0.55, 0.9, 0.65]);
     return (
         <div ref={ref} className={`hero-flight-atmosphere ${visible && !reducedMotion ? 'is-active' : ''}`} aria-hidden="true">
             <div className="hero-sky-viewport">
                 <div className="hero-sky-horizon" />
+                <motion.div className="hero-daylight-sky" style={reducedMotion ? undefined : { opacity: daylightOpacity }}>
+                    <motion.div className="hero-daylight-sun" style={reducedMotion ? undefined : { y: sunY, scale: sunScale }}>
+                        <span className="hero-sun-halo" /><span className="hero-sun-corona" /><span className="hero-sun-disc" />
+                    </motion.div>
+                    <motion.div className="hero-daylight-cloud-layer" style={reducedMotion ? undefined : { x: cloudX, y: cloudY }}>
+                        <SkyCloud className="day-cloud-one" daylight /><SkyCloud className="day-cloud-two" daylight />
+                    </motion.div>
+                    <motion.div className="hero-daylight-cloud-layer hero-day-clouds-near" style={reducedMotion ? undefined : { y: nearCloudY }}>
+                        <SkyCloud className="day-cloud-three" daylight />
+                    </motion.div>
+                </motion.div>
                 <motion.div className="hero-flight-stars" style={reducedMotion ? undefined : { y: starsY, opacity: starsOpacity }}>
                     {flightStars.map((star, index) => <span key={index} className={star.size === 4 ? 'flight-star flight-star-spark' : 'flight-star'} style={{ left: star.left, top: star.top, width: star.size, height: star.size, animationDelay: `${index * -0.7}s` }} />)}
                 </motion.div>

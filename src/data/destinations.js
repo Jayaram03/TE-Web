@@ -7,7 +7,7 @@ export const destinations = [
         "tagline": "Wilderness & Spice",
         "image": "/images/destinations/thekkady.jpg",
         "description": "Home to the Periyar Wildlife Sanctuary, Thekkady offers a perfect blend of wildlife, spice plantations, and trekking.",
-        "price": "₹12,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - Feb",
         "itinerary": [
@@ -61,7 +61,7 @@ export const destinations = [
         "tagline": "Cliffs & Beaches",
         "image": "/images/destinations/varkala.jpg",
         "description": "Famous for its unique red sandstone cliffs meeting the Arabian Sea, Varkala is a laid-back beach paradise.",
-        "price": "₹10,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - March",
         "itinerary": [
@@ -115,7 +115,7 @@ export const destinations = [
         "tagline": "Pine Forests & Meadows",
         "image": "/images/destinations/vagamon.jpg",
         "description": "A serene hill station with distinct pine forests, lush meadows, and mist-covered valleys.",
-        "price": "₹9,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - March",
         "itinerary": [
@@ -169,7 +169,7 @@ export const destinations = [
         "tagline": "Tea Gardens & Misty Hills",
         "image": "/images/destinations/munnar.jpg",
         "description": "Rolling tea plantations and misty mountains make Munnar one of the most romantic hill stations in India.",
-        "price": "₹13,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Sept - March",
         "itinerary": [
@@ -223,7 +223,7 @@ export const destinations = [
         "tagline": "Venice of the East",
         "image": "/images/destinations/alleppey.jpg",
         "description": "Experience the tranquility of backwaters with a stay in a traditional houseboat.",
-        "price": "₹15,499",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Nov - Feb",
         "itinerary": [
@@ -277,7 +277,7 @@ export const destinations = [
         "tagline": "Eco-Tourism Village",
         "image": "/images/destinations/kumblangi.jpg",
         "description": "India's first model tourism village, offering authentic rural experiences and fishing culture.",
-        "price": "₹8,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - March",
         "itinerary": [
@@ -331,7 +331,7 @@ export const destinations = [
         "tagline": "Queen of the Arabian Sea",
         "image": "/images/destinations/kochi.jpg",
         "description": "A vibrant city blending colonial history, Chinese fishing nets, and modern urban life.",
-        "price": "₹11,499",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - Feb",
         "itinerary": [
@@ -385,7 +385,7 @@ export const destinations = [
         "tagline": "Nature’s Abode",
         "image": "/images/destinations/wayanad.jpg",
         "description": "Known for its waterfalls, caves, and spice plantations nestled in the Western Ghats.",
-        "price": "₹12,499",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - May",
         "itinerary": [
@@ -439,7 +439,7 @@ export const destinations = [
         "tagline": "Princess of Hill Stations",
         "image": "/images/destinations/kodaikanal.jpg",
         "description": "A charming hill station centered around a star-shaped lake, known for its mist and cool climate.",
-        "price": "₹11,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "April - June",
         "itinerary": [
@@ -493,7 +493,7 @@ export const destinations = [
         "tagline": "Jewel of the South",
         "image": "/images/destinations/yercaud.jpg",
         "description": "A quiet and scenic hill station in the Shevaroy Hills, famous for orange groves and coffee plantations.",
-        "price": "₹9,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - June",
         "itinerary": [
@@ -547,7 +547,7 @@ export const destinations = [
         "tagline": "Queen of Hills",
         "image": "/images/destinations/ooty.jpg",
         "description": "Famous for the Nilgiri Mountain Railway, diverse botanical gardens, and sprawling tea estates.",
-        "price": "₹12,499",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "April - June",
         "itinerary": [
@@ -601,7 +601,7 @@ export const destinations = [
         "tagline": "Coffee Land of India",
         "image": "/images/destinations/chikmangalur.jpg",
         "description": "Lush green hills covered in coffee plantations. A trekker’s delight with Mullayanagiri peak.",
-        "price": "₹10,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Sept - March",
         "itinerary": [
@@ -655,7 +655,7 @@ export const destinations = [
         "tagline": "Scotland of India",
         "image": "/images/destinations/coorg.jpg",
         "description": "Famous for its coffee, culture, and misty landscapes. Visit the Dubare Elephant Camp and Abbey Falls.",
-        "price": "₹11,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - March",
         "itinerary": [
@@ -709,7 +709,7 @@ export const destinations = [
         "tagline": "Surfing Paradise",
         "image": "/images/destinations/mulki.jpg",
         "description": "A hidden gem for water sports enthusiasts, offering surfing, kayaking, and wakeboarding.",
-        "price": "₹13,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - March",
         "itinerary": [
@@ -763,7 +763,7 @@ export const destinations = [
         "tagline": "Sun, Sand & Sea",
         "image": "/images/destinations/goa.jpg",
         "description": "The ultimate party and relaxation destination with stunning beaches, Portuguese heritage, and vibrant nightlife.",
-        "price": "₹14,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Nov - Feb",
         "itinerary": [
@@ -817,7 +817,7 @@ export const destinations = [
         "tagline": "Grand Canyon of India",
         "image": "/images/destinations/gandikota.jpg",
         "description": "A spectacular gorge formed by river Pennar, featuring an ancient fort and breathtaking canyon views.",
-        "price": "₹8,499",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Sept - March",
         "itinerary": [
@@ -871,7 +871,7 @@ export const destinations = [
         "tagline": "The Golden City",
         "image": "/images/destinations/jaisalmer.jpg",
         "description": "Famous for its yellow sandstone architecture and the massive Jaisalmer Fort standing in the Thar Desert.",
-        "price": "₹16,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - March",
         "itinerary": [
@@ -925,7 +925,7 @@ export const destinations = [
         "tagline": "Delhi, Agra, Jaipur",
         "image": "/images/destinations/tajmahal.jpg",
         "description": "Explore India’s rich history with the Taj Mahal, Amber Fort, and Red Fort in one iconic circuit.",
-        "price": "₹18,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - March",
         "itinerary": [
@@ -979,7 +979,7 @@ export const destinations = [
         "tagline": "Valley of Gods",
         "image": "/images/destinations/manali.jpg",
         "description": "Adventure and peace combined. Famous for Solang Valley, Rohtang Pass, and cafe culture.",
-        "price": "₹15,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "March - June",
         "itinerary": [
@@ -1033,7 +1033,7 @@ export const destinations = [
         "tagline": "Heaven on Earth",
         "image": "/images/destinations/kashmir.jpg",
         "description": "Dal Lake, Shikara rides, and Gulmarg meadows make this a truly heavenly experience.",
-        "price": "₹22,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "March - Oct",
         "itinerary": [
@@ -1087,7 +1087,7 @@ export const destinations = [
         "tagline": "Land of High Passes",
         "image": "/images/destinations/ladakh.jpg",
         "description": "Dramatic landscapes, crystal clear lakes like Pangong Tso, and ancient monasteries.",
-        "price": "₹28,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "June - Sept",
         "itinerary": [
@@ -1141,7 +1141,7 @@ export const destinations = [
         "tagline": "Organic State",
         "image": "/images/destinations/sikkim.jpg",
         "description": "Home to Kanchenjunga, high altitude lakes, and vibrant Buddhist monasteries.",
-        "price": "₹21,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "March - May",
         "itinerary": [
@@ -1195,7 +1195,7 @@ export const destinations = [
         "tagline": "Abode of Clouds",
         "image": "/images/destinations/meghalaya.jpg",
         "description": "Known for its living root bridges, cleanest village in Asia, and stunning waterfalls.",
-        "price": "₹19,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - May",
         "itinerary": [
@@ -1249,7 +1249,7 @@ export const destinations = [
         "tagline": "City of Gold",
         "image": "/images/destinations/dubai.jpg",
         "description": "Futuristic architecture, huge shopping malls, and desert safaris defined by luxury.",
-        "price": "₹45,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Nov - March",
         "itinerary": [
@@ -1303,7 +1303,7 @@ export const destinations = [
         "tagline": "Island of Gods",
         "image": "/images/destinations/bali.jpg",
         "description": "Tropical beaches, volcanic mountains, and iconic rice paddies rich in culture.",
-        "price": "₹39,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "April - Oct",
         "itinerary": [
@@ -1357,7 +1357,7 @@ export const destinations = [
         "tagline": "Land of Pharaohs",
         "image": "/images/destinations/cairo.jpg",
         "description": "Explore the Great Pyramids of Giza and the Sphinx in this ancient metropolis.",
-        "price": "₹55,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Oct - April",
         "itinerary": [
@@ -1411,7 +1411,7 @@ export const destinations = [
         "tagline": "Land of Smiles",
         "image": "/images/destinations/thailand.jpg",
         "description": "From Bangkok’s bustle to Phuket’s beaches, Thailand offers it all at great value.",
-        "price": "₹32,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Nov - April",
         "itinerary": [
@@ -1465,7 +1465,7 @@ export const destinations = [
         "tagline": "Timeless Charm",
         "image": "/images/destinations/vietnam.jpg",
         "description": "Halong Bay cruises, historic Hanoi, and lantern-lit Hoi An streets.",
-        "price": "₹38,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Feb - April",
         "itinerary": [
@@ -1519,7 +1519,7 @@ export const destinations = [
         "tagline": "Truly Asia",
         "image": "/images/destinations/malaysia.jpg",
         "description": "A mix of Malay, Chinese, Indian and European cultural influences with stunning Twin Towers.",
-        "price": "₹34,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Year Round",
         "itinerary": [
@@ -1573,7 +1573,7 @@ export const destinations = [
         "tagline": "Lion City",
         "image": "/images/destinations/singapore.jpg",
         "description": "A global financial center with a tropical climate and multicultural population.",
-        "price": "₹42,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Year Round",
         "itinerary": [
@@ -1627,7 +1627,7 @@ export const destinations = [
         "tagline": "Pearl of Indian Ocean",
         "image": "/images/destinations/srilanka.jpg",
         "description": "Ancient ruins, endless beaches, famous tea, and flavor-packed food.",
-        "price": "₹29,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Year Round",
         "itinerary": [
@@ -1681,7 +1681,7 @@ export const destinations = [
         "tagline": "Heart of Eurasia",
         "image": "/images/destinations/kazakhstan.jpg",
         "description": "Discover Almaty’s mountains and lakes in this emerging destination.",
-        "price": "₹55,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "May - Sept",
         "itinerary": [
@@ -1735,7 +1735,7 @@ export const destinations = [
         "tagline": "Balcony of Europe",
         "image": "/images/destinations/georgia.jpg",
         "description": "Stunning Caucasus mountains, ancient wine regions, and historic Tbilisi.",
-        "price": "₹65,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "May - Sept",
         "itinerary": [
@@ -1789,7 +1789,7 @@ export const destinations = [
         "tagline": "Grand Classic",
         "image": "/images/destinations/europe.jpg",
         "description": "Experience Paris, Swiss Alps, and Rome in one grand tour.",
-        "price": "₹1,49,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "May - Sept",
         "itinerary": [
@@ -1843,7 +1843,7 @@ export const destinations = [
         "tagline": "Tropical Paradise",
         "image": "/images/destinations/maldives.jpg",
         "description": "Overwater villas and turquoise lagoons for the ultimate luxury escape.",
-        "price": "₹60,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "Nov - April",
         "itinerary": [
@@ -1897,7 +1897,7 @@ export const destinations = [
         "tagline": "Land of Rising Sun",
         "image": "/images/destinations/japan.jpg",
         "description": "Cherry blossoms, ancient temples, and futuristic technology.",
-        "price": "₹1,20,999",
+        "price": "Request a quote",
         "duration": "5 Days / 4 Nights",
         "bestTime": "March - May",
         "itinerary": [

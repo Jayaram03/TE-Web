@@ -3,7 +3,20 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
+  <script>
+    // Resolve before CSS/React renders; storage may be unavailable in private browsing.
+    (() => {
+      const hour = new Date().getHours();
+      let theme = hour >= 6 && hour < 18 ? 'day' : 'night';
+      try {
+        const saved = localStorage.getItem('te-theme');
+        if (saved === 'day' || saved === 'night') theme = saved;
+      } catch { /* Use local time when storage is blocked. */ }
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme === 'night' ? 'dark' : 'light';
+    })();
+  </script>
+  <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Travel Episodes</title>
   <meta name="description"

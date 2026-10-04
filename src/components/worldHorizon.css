@@ -1,0 +1,101 @@
+/* A clipped top-of-world cap, not a globe. Override legacy scene padding/color
+   without reusing the old horizontal track or promoting an enormous GPU layer. */
+html footer .skyline-scene.world-horizon {
+    width: 100%;
+    height: 180px;
+    padding: 0;
+    overflow: hidden;
+    contain: layout paint;
+    pointer-events: none;
+    color: var(--theme-accent);
+}
+
+/* The legacy day-theme rule is loaded later; outrank it locally. */
+html[data-theme] footer .skyline-scene.world-horizon {
+    color: var(--theme-accent);
+}
+
+.world-horizon-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.world-horizon-ring {
+    /* The outer SVG uses a zero-origin viewBox; its parent translates the
+       mathematical centre below the clipped scene. Rotate in local coordinates. */
+    transform-box: view-box;
+    transform-origin: 0 0;
+    animation: world-horizon-turn 58s linear infinite paused;
+}
+
+footer[data-document-visible="true"] .world-horizon.is-active .world-horizon-ring {
+    animation-play-state: running;
+}
+
+html[data-mobile-menu-open="true"] .world-horizon-ring {
+    animation-play-state: paused !important;
+}
+
+.world-horizon-landmark {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.8;
+}
+
+.world-horizon-surface {
+    stroke: currentColor;
+    stroke-width: 1;
+    stroke-linecap: round;
+}
+
+.world-horizon-edge {
+    opacity: 0.46;
+}
+
+.world-horizon-latitude {
+    stroke-width: 0.65;
+    opacity: 0.11;
+}
+
+.world-horizon-map-detail {
+    stroke-width: 0.65;
+    opacity: 0.14;
+}
+
+.world-horizon-map-detail circle {
+    fill: currentColor;
+    stroke: none;
+}
+
+.world-horizon-constellation {
+    stroke-width: 0.55;
+    opacity: 0.55;
+}
+
+.world-horizon-meridian {
+    stroke-width: 0.8;
+    opacity: 0.2;
+}
+
+@keyframes world-horizon-turn {
+    to {
+        transform: rotate(var(--world-turn));
+    }
+}
+
+@media (max-width: 767px) {
+    html footer .skyline-scene.world-horizon {
+        height: 140px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .world-horizon .world-horizon-ring {
+        animation: none;
+    }
+}
