@@ -11,6 +11,7 @@ import { useSearchParams } from 'react-router-dom';
 import { destinations } from '../data/destinations';
 import { trendingDestinations } from '../data/trendingDestinations';
 import { suggestedTransport, tomorrowDate, tripNights } from '../data/tripPlanning';
+import './enquiryForm.css';
 
 // ============================================================================
 // This form submits directly into the SAME Google Sheet that your original
@@ -53,6 +54,15 @@ const transportOptions = ['Car', 'Traveller Van', 'Bus (For Bigger groups)'];
 const stayOptions = ['3* Hotels', '4* Hotels or above', 'Resort / Cottages', 'Tent / Camping'];
 const transportIcons = { 'Car': Car, 'Traveller Van': Bus, 'Bus (For Bigger groups)': Bus };
 const stayIcons = { '3* Hotels': BedDouble, '4* Hotels or above': BedDouble, 'Resort / Cottages': Tent, 'Tent / Camping': Tent };
+const preferenceCopy = {
+    'Car': ['Car', 'Small-group comfort'],
+    'Traveller Van': ['Traveller van', 'Room for your crew'],
+    'Bus (For Bigger groups)': ['Bus', 'For bigger groups'],
+    '3* Hotels': ['3-star hotels', 'Comfort & value'],
+    '4* Hotels or above': ['4-star & above', 'A little more luxury'],
+    'Resort / Cottages': ['Resort / cottages', 'A scenic escape'],
+    'Tent / Camping': ['Tent / camping', 'Closer to nature'],
+};
 
 const initialForm = {
     name: '',
@@ -69,11 +79,11 @@ const initialForm = {
     message: '',
 };
 
-const inputClasses = "w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-800 placeholder:text-slate-400";
+const inputClasses = "enquiry-input w-full min-w-0 max-w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-800 placeholder:text-slate-400";
 const labelClasses = "block text-sm font-bold text-slate-700 mb-2";
 
 const Field = ({ icon: Icon, children }) => (
-    <div className="relative">
+    <div className="relative min-w-0 w-full">
         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400">
             <Icon className="w-5 h-5" />
         </div>
@@ -81,24 +91,20 @@ const Field = ({ icon: Icon, children }) => (
     </div>
 );
 
-const IconPillGroup = ({ options, icons, value, onChange }) => (
-    <div className="flex flex-wrap gap-2">
+const PreferenceGroup = ({ name, options, icons, value, onChange }) => (
+    <div className={`enquiry-preferences enquiry-preferences--${name}`}>
         {options.map((opt) => {
             const Icon = icons?.[opt];
+            const [title, description] = preferenceCopy[opt];
             return (
-                <button
-                    type="button"
-                    key={opt}
-                    aria-pressed={value === opt}
-                    onClick={() => onChange(opt)}
-                    className={`flex min-h-11 items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${value === opt
-                        ? 'bg-primary border-primary text-white shadow-md shadow-primary/20'
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-primary/40'
-                        }`}
-                >
-                    {Icon && <Icon className="w-4 h-4" />}
-                    {opt}
-                </button>
+                <label key={opt} className="enquiry-preference">
+                    <input type="radio" name={name} value={opt} checked={value === opt} onChange={() => onChange(opt)} />
+                    <span className="enquiry-preference-card">
+                        <span className="enquiry-preference-icon">{Icon && <Icon aria-hidden="true" />}</span>
+                        <span className="enquiry-preference-copy"><strong>{title}</strong><span>{description}</span></span>
+                        <span className="enquiry-preference-check" aria-hidden="true"><CheckCircle2 /></span>
+                    </span>
+                </label>
             );
         })}
     </div>
@@ -349,7 +355,7 @@ const EnquiryForm = ({ destinationName = '' }) => {
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     onSubmit={handleSubmit}
-                                    className="p-5 sm:p-8 md:p-10 space-y-6"
+                                    className="enquiry-form p-5 sm:p-8 md:p-10 space-y-6"
                                     noValidate
                                 >
                                     <h3 className="flex items-center gap-3 text-base font-bold"><span className="rounded-lg bg-orange-50 px-2.5 py-1.5 text-xs text-primary">01</span> The travelling crew</h3>
@@ -489,17 +495,17 @@ const EnquiryForm = ({ destinationName = '' }) => {
 
                                     <p role="status" data-trip-duration className="text-sm font-bold text-primary">{nights !== null ? `${nights} ${nights === 1 ? 'night' : 'nights'} / ${nights + 1} ${nights === 0 ? 'day' : 'days'}` : 'Select both dates to see your trip duration.'}</p>
                                     <h3 className="flex items-center gap-3 border-t border-slate-100 pt-6 text-base font-bold"><span className="rounded-lg bg-orange-50 px-2.5 py-1.5 text-xs text-primary">03</span> Travel preferences</h3>
-                                    <div>
-                                        <p className={labelClasses}>Transportation Preferences *</p>
-                                        <IconPillGroup options={transportOptions} icons={transportIcons} value={form.transport} onChange={(v) => update('transport', v)} />
+                                    <fieldset className="enquiry-preference-fieldset">
+                                        <legend className={labelClasses}>Transportation Preferences *</legend>
+                                        <PreferenceGroup name="transport" options={transportOptions} icons={transportIcons} value={form.transport} onChange={(v) => update('transport', v)} />
                                         <p className="text-xs text-slate-500 mt-3">{manualTransport ? 'Your transport preference is selected.' : 'Suggested for your group: 1–7 car, 8–21 van, 22+ bus. You can choose another option.'}</p>
                                         {manualTransport && <button type="button" className="min-h-11 text-xs text-primary font-bold underline" onClick={() => { setManualTransport(false); setForm(f => ({ ...f, transport: suggestedTransport(f.people) })); }}>Use automatic suggestion</button>}
-                                    </div>
+                                    </fieldset>
 
-                                    <div>
-                                        <p className={labelClasses}>Stay Preferences *</p>
-                                        <IconPillGroup options={stayOptions} icons={stayIcons} value={form.stay} onChange={(v) => update('stay', v)} />
-                                    </div>
+                                    <fieldset className="enquiry-preference-fieldset">
+                                        <legend className={labelClasses}>Stay Preferences *</legend>
+                                        <PreferenceGroup name="stay" options={stayOptions} icons={stayIcons} value={form.stay} onChange={(v) => update('stay', v)} />
+                                    </fieldset>
 
                                     <div>
                                         <label htmlFor="enquiry-referral" className={labelClasses}>Referral code / Referred by (if any)</label>

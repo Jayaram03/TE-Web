@@ -1,0 +1,188 @@
+.enquiry-form,
+.enquiry-form .grid>*,
+.enquiry-preference-fieldset {
+    min-width: 0;
+}
+
+.enquiry-input {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 16px;
+}
+
+/* Safari's native date control otherwise keeps its intrinsic content width. */
+.enquiry-input[type="date"] {
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 52px;
+    color-scheme: light;
+}
+
+.enquiry-input[type="date"]::-webkit-date-and-time-value {
+    min-width: 0;
+    text-align: left;
+}
+
+.enquiry-input[type="date"]::-webkit-datetime-edit {
+    min-width: 0;
+    padding: 0;
+}
+
+html[data-theme="night"] .enquiry-input[type="date"] {
+    color-scheme: dark;
+}
+
+.enquiry-preference-fieldset {
+    padding: 0;
+    border: 0;
+}
+
+.enquiry-preferences {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.enquiry-preferences--transport {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.enquiry-preference {
+    position: relative;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.enquiry-preference>input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.enquiry-preference-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 100%;
+    min-height: 82px;
+    padding: 14px 12px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--quiet-bg);
+    color: var(--body-ink);
+    transition: border-color 180ms ease, background-color 180ms ease;
+}
+
+.enquiry-preference-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--panel-bg);
+    color: var(--muted-ink);
+}
+
+.enquiry-preference-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.enquiry-preference-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.enquiry-preference-copy strong {
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 700;
+}
+
+.enquiry-preference-copy>span {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--muted-ink);
+}
+
+.enquiry-preference-check {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin-left: auto;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+}
+
+.enquiry-preference-check svg {
+    display: none;
+    width: 16px;
+    height: 16px;
+}
+
+.enquiry-preference>input:checked+.enquiry-preference-card {
+    border-color: var(--theme-accent);
+    background: color-mix(in srgb, var(--theme-accent) 8%, var(--panel-bg));
+}
+
+.enquiry-preference>input:checked+.enquiry-preference-card :is(.enquiry-preference-icon, strong, .enquiry-preference-check) {
+    color: var(--theme-accent);
+}
+
+.enquiry-preference>input:checked+.enquiry-preference-card .enquiry-preference-check {
+    border: 0;
+}
+
+.enquiry-preference>input:checked+.enquiry-preference-card .enquiry-preference-check svg {
+    display: block;
+}
+
+.enquiry-preference>input:focus-visible+.enquiry-preference-card {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 3px;
+}
+
+@media (hover: hover) {
+    .enquiry-preference:hover .enquiry-preference-card {
+        border-color: var(--theme-accent);
+    }
+}
+
+@media (max-width: 639px) {
+    .enquiry-preferences--transport {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .enquiry-preference-card {
+        min-height: 76px;
+        padding: 12px;
+    }
+
+    .enquiry-preferences--stay .enquiry-preference-card {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .enquiry-preferences--stay .enquiry-preference-copy {
+        order: 1;
+        width: 100%;
+    }
+
+    .enquiry-preferences--stay .enquiry-preference-check {
+        margin-top: 9px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .enquiry-preference-card {
+        transition: none;
+    }
+}
