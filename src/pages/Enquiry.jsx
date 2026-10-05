@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     User, Mail, Phone, MapPin, Navigation, Users, Calendar,
@@ -192,6 +192,23 @@ function splitDate(value) {
 }
 
 const EnquiryForm = ({ destinationName = '' }) => {
+    const formSectionRef = useRef(null);
+    useEffect(() => {
+        // Briefly show the page above the form, then guide visitors down to it.
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const timer = window.setTimeout(() => {
+            formSectionRef.current?.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'instant' : 'smooth' });
+        }, reducedMotion ? 0 : 400);
+        // Do not override someone who starts navigating during the opening pause.
+        const cancel = () => window.clearTimeout(timer);
+        const events = ['wheel', 'touchstart', 'pointerdown', 'keydown'];
+        events.forEach(event => window.addEventListener(event, cancel, { passive: true, once: true }));
+        return () => {
+            cancel();
+            events.forEach(event => window.removeEventListener(event, cancel));
+        };
+    }, []);
+
     const [form, setForm] = useState(() => ({ ...initialForm, destination: destinationName }));
     const [manualTransport, setManualTransport] = useState(false);
     const minStart = tomorrowDate();
@@ -311,7 +328,7 @@ const EnquiryForm = ({ destinationName = '' }) => {
                     <TrendingTripPicker selected={form.destination} onSelect={name => update('destination', name)} />
                 </section>
 
-                <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] gap-6 lg:gap-8 max-w-6xl mx-auto items-start">
+                <div ref={formSectionRef} style={{ scrollMarginTop: 'calc(var(--site-header-height) + 16px)' }} className="grid lg:grid-cols-[280px_minmax(0,1fr)] gap-6 lg:gap-8 max-w-6xl mx-auto items-start">
                     <aside className="order-2 lg:order-1 space-y-5">
                         {status !== 'success' && <div className="rounded-3xl border border-orange-200 bg-white p-6 relative">
                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-4">Trip summary</p>
