@@ -11,47 +11,11 @@ import { useSearchParams } from 'react-router-dom';
 import { destinations } from '../data/destinations';
 import { trendingDestinations } from '../data/trendingDestinations';
 import { suggestedTransport, tomorrowDate, tripNights } from '../data/tripPlanning';
+import { DRAFT_KEY, transportOptions, stayOptions, readDraft, saveDraft, normalizeEnquiry, validateEnquiry, submitEnquiry, googleFormFallback } from '../data/enquirySubmission';
 import './enquiryForm.css';
-
-// ============================================================================
-// This form submits directly into the SAME Google Sheet that your original
-// embedded Google Form ("Enquiries-26") was linked to. It works by posting
-// to Google's own `formResponse` endpoint for that form (the same thing that
-// happens when someone fills in and submits the actual Google Form) via a
-// hidden iframe, so the page never navigates away and there's no visible
-// Google UI. Accepted responses use the original form's linked Sheet.
-// The browser cannot read Google's cross-origin confirmation, so a load event
-// indicates the response page loaded, not independent verification of a row.
-//
-// The field IDs below (entry.xxxxxxx) were read directly from the public
-// form at:
-// https://docs.google.com/forms/d/e/1FAIpQLScgsRCJAg1ZbXQ1Uk4GbL5fWShnkAWq7gLtA9POBUUpYnX4Pg/viewform
-// If you ever edit the Google Form and add/remove/rename fields, these IDs
-// may change and will need to be re-extracted the same way.
-// ============================================================================
-const FORM_ID = '1FAIpQLScgsRCJAg1ZbXQ1Uk4GbL5fWShnkAWq7gLtA9POBUUpYnX4Pg';
-const FORM_ACTION_URL = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
-const IFRAME_NAME = 'hidden_enquiry_iframe';
-
-const ENTRY = {
-    name: 'entry.1089377378',
-    email: 'entry.1495965433',
-    mobile: 'entry.228924055',
-    destination: 'entry.1017602788',
-    startingPoint: 'entry.1539082874',
-    people: 'entry.779309777',
-    tripStart: 'entry.90809953', // date field -> _year/_month/_day
-    tripEnd: 'entry.1369608764', // date field -> _year/_month/_day
-    transport: 'entry.961666899', // radio
-    stay: 'entry.1633115499', // radio
-    referral: 'entry.353242617',
-    message: 'entry.343713554',
-};
 
 const FALLBACK_EMAIL = 'travelepisodeschennai@gmail.com';
 
-const transportOptions = ['Car', 'Traveller Van', 'Bus (For Bigger groups)'];
-const stayOptions = ['3* Hotels', '4* Hotels or above', 'Resort / Cottages', 'Tent / Camping'];
 const transportIcons = { 'Car': Car, 'Traveller Van': Bus, 'Bus (For Bigger groups)': Bus };
 const stayIcons = { '3* Hotels': BedDouble, '4* Hotels or above': BedDouble, 'Resort / Cottages': Tent, 'Tent / Camping': Tent };
 const preferenceCopy = {
@@ -116,83 +80,9 @@ const ErrorText = ({ text }) => (
     </p>
 );
 
-/**
- * Submits form data to the Google Form's formResponse endpoint using a
- * dynamically created <form> that targets a hidden <iframe>. This mirrors
- * exactly what happens when a user submits the real Google Form, so the
- * accepted response uses the original linked Google Sheet without navigating
- * away. Cross-origin iframe responses cannot be inspected by this page.
- */
-function submitToGoogleForm(payload) {
-    return new Promise((resolve) => {
-        if (!navigator.onLine) {
-            resolve(false);
-            return;
-        }
-        const form = document.createElement('form');
-        form.action = FORM_ACTION_URL;
-        form.method = 'POST';
-        form.target = IFRAME_NAME;
-        form.style.display = 'none';
-
-        Object.entries(payload).forEach(([key, value]) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = value ?? '';
-            form.appendChild(input);
-        });
-
-        document.body.appendChild(form);
-
-        const iframe = document.getElementsByName(IFRAME_NAME)[0];
-        let safetyTimeout;
-        const cleanup = () => {
-            clearTimeout(safetyTimeout);
-            iframe?.removeEventListener('load', onLoad);
-            iframe?.removeEventListener('error', onError);
-            if (form.parentNode) form.parentNode.removeChild(form);
-        };
-        const onLoad = () => {
-            cleanup();
-            resolve(true);
-        };
-        const onError = () => {
-            cleanup();
-            resolve(false);
-        };
-
-        if (!iframe) {
-            cleanup();
-            resolve(false);
-            return;
-        }
-        iframe.addEventListener('load', onLoad);
-        iframe.addEventListener('error', onError);
-        // A missing response must never be presented as a successful enquiry.
-        safetyTimeout = setTimeout(() => {
-            cleanup();
-            resolve(null);
-        }, 20000);
-
-        try {
-            form.submit();
-        } catch {
-            clearTimeout(safetyTimeout);
-            cleanup();
-            resolve(false);
-        }
-    });
-}
-
-function splitDate(value) {
-    if (!value) return { year: '', month: '', day: '' };
-    const [year, month, day] = value.split('-');
-    return { year, month, day };
-}
-
 const EnquiryForm = ({ destinationName = '' }) => {
     const formSectionRef = useRef(null);
+    const sendingRef = useRef(false);
     useEffect(() => {
         // Briefly show the page above the form, then guide visitors down to it.
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -209,15 +99,28 @@ const EnquiryForm = ({ destinationName = '' }) => {
         };
     }, []);
 
-    const [form, setForm] = useState(() => ({ ...initialForm, destination: destinationName }));
+    const [restored] = useState(() => {
+        try { return readDraft(window.localStorage); } catch { return null; }
+    });
+    const [form, setForm] = useState(() => restored?.form || ({ ...initialForm, destination: destinationName }));
+    const [pending, setPending] = useState(restored?.pending || null);
+    const [deliveryMessage, setDeliveryMessage] = useState('');
+    const [storageWarning, setStorageWarning] = useState('');
+    const [receipt, setReceipt] = useState(null);
     const [manualTransport, setManualTransport] = useState(false);
     const minStart = tomorrowDate();
     const nights = tripNights(form.tripStart, form.tripEnd);
     const inspiration = destinations.find(destination => destination.name.toLowerCase() === form.destination.toLowerCase()) || trendingDestinations[0];
-    const [status, setStatus] = useState('idle'); // idle | loading | success | error | unconfirmed
+    const [status, setStatus] = useState(restored?.pending ? 'unconfirmed' : 'idle');
     const [errors, setErrors] = useState({});
 
+    useEffect(() => {
+        if (status === 'success') return;
+        try { saveDraft(window.localStorage, form, pending); } catch { /* Submission reports storage failures explicitly. */ }
+    }, [form, pending, status]);
+
     const update = (key, value) => {
+        if (sendingRef.current || pending) return;
         if (key === 'transport') setManualTransport(true);
         setForm(f => ({
             ...f, [key]: value,
@@ -228,65 +131,60 @@ const EnquiryForm = ({ destinationName = '' }) => {
     };
 
     const validate = () => {
-        const next = {};
-        if (!form.name.trim()) next.name = 'Please enter your name';
-        if (!form.email.trim() || !/^\S+@\S+\.\S+$/.test(form.email.trim())) next.email = 'Enter a valid email';
-        if (!form.mobile.trim() || form.mobile.replace(/\D/g, '').length < 10) next.mobile = 'Enter a valid mobile number';
-        if (!form.destination.trim()) next.destination = 'Tell us where you want to go';
-        if (!form.startingPoint.trim()) next.startingPoint = 'Tell us your starting location';
-        if (!form.people.trim() || !Number.isSafeInteger(Number(form.people)) || Number(form.people) < 1) next.people = 'Enter a whole number of travellers (at least 1)';
-        if (!form.tripStart) next.tripStart = 'Select a start date';
-        else if (form.tripStart < tomorrowDate()) next.tripStart = 'Choose a future date (tomorrow or later)';
-        if (!form.tripEnd) next.tripEnd = 'Select an end date';
-        if (form.tripStart && form.tripEnd && form.tripEnd < form.tripStart) {
-            next.tripEnd = 'End date must be after start date';
-        }
+        const next = validateEnquiry(form, tomorrowDate());
         setErrors(next);
+        if (Object.keys(next).length) {
+            const ids = { startingPoint: 'starting-point', tripStart: 'start-date', tripEnd: 'end-date' };
+            document.getElementById(`enquiry-${ids[Object.keys(next)[0]] || Object.keys(next)[0]}`)?.focus();
+        }
         return Object.keys(next).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (status === 'loading') return;
-        if (!validate()) return;
-
+        if (sendingRef.current) return;
+        // An old pending enquiry must remain retryable even after its travel date passes.
+        if (!pending && !validate()) return;
+        sendingRef.current = true;
         setStatus('loading');
-
-        const start = splitDate(form.tripStart);
-        const end = splitDate(form.tripEnd);
-
-        const payload = {
-            [ENTRY.name]: form.name.trim(),
-            [ENTRY.email]: form.email.trim(),
-            [ENTRY.mobile]: form.mobile.trim(),
-            [ENTRY.destination]: form.destination.trim(),
-            [ENTRY.startingPoint]: form.startingPoint.trim(),
-            [ENTRY.people]: form.people,
-            [`${ENTRY.tripStart}_year`]: start.year,
-            [`${ENTRY.tripStart}_month`]: start.month,
-            [`${ENTRY.tripStart}_day`]: start.day,
-            [`${ENTRY.tripEnd}_year`]: end.year,
-            [`${ENTRY.tripEnd}_month`]: end.month,
-            [`${ENTRY.tripEnd}_day`]: end.day,
-            [ENTRY.transport]: form.transport,
-            [ENTRY.stay]: form.stay,
-            [ENTRY.referral]: form.referral,
-            [ENTRY.message]: form.message,
-        };
-
         try {
-            const ok = await submitToGoogleForm(payload);
-            if (ok === true) {
-                setStatus('success');
-            } else if (ok === null) {
-                setStatus('unconfirmed');
-            } else {
-                throw new Error('submission-failed');
+            const attempt = pending || { id: crypto.randomUUID(), form: normalizeEnquiry(form) };
+            // Persist the exact payload and ID BEFORE the network request, not after a timeout.
+            try {
+                saveDraft(window.localStorage, attempt.form, attempt);
+                setStorageWarning('');
+            } catch {
+                setStorageWarning('This browser cannot save a recovery copy. Keep this page open and download your details before leaving.');
             }
+            setPending(attempt);
+            if (!navigator.onLine) throw new Error('You are offline. Your enquiry has not been confirmed; reconnect and retry.');
+            const confirmed = await submitEnquiry(attempt);
+            setReceipt(confirmed);
+            setStatus('success');
+            setPending(null);
+            try { window.localStorage.removeItem(DRAFT_KEY); } catch { /* Receipt still confirms delivery. */ }
         } catch (err) {
-            console.error('Enquiry submission failed', err);
-            setStatus('error');
+            if (err.fields || err.notAccepted) {
+                if (err.fields) setErrors(err.fields);
+                setPending(null); // Explicit pre-delivery rejection is safe to edit.
+                setStatus('error');
+            } else {
+                setStatus('unconfirmed');
+            }
+            setDeliveryMessage(err.name === 'AbortError' ? 'Confirmation timed out. Retry to check the same enquiry; do not start a duplicate.' : err.message);
+        } finally {
+            sendingRef.current = false;
         }
+    };
+
+    const downloadEnquiry = () => {
+        const data = { reference: pending?.id || receipt?.submissionId || 'Draft — not submitted', enquiry: pending?.form || form };
+        const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'travel-episodes-enquiry.json';
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
     const sendViaEmailInstead = () => {
@@ -309,7 +207,12 @@ const EnquiryForm = ({ destinationName = '' }) => {
     };
 
     const resetForm = () => {
+        try { window.localStorage.removeItem(DRAFT_KEY); } catch { /* Best-effort local cleanup. */ }
         setForm({ ...initialForm, destination: destinationName });
+        setPending(null);
+        setReceipt(null);
+        setDeliveryMessage('');
+        setStorageWarning('');
         setManualTransport(false);
         setErrors({});
         setStatus('idle');
@@ -317,9 +220,6 @@ const EnquiryForm = ({ destinationName = '' }) => {
 
     return (
         <div className="pt-28 md:pt-40 pb-16 md:pb-24 min-h-screen bg-[#faf8f4] overflow-x-clip">
-            {/* Hidden iframe target used to submit the form without a page reload/navigation */}
-            <iframe name={IFRAME_NAME} title="Enquiry submission target" style={{ display: 'none' }} />
-
             <div className="container px-4">
                 <TravelPageHeader title="Plan your" accent="next trip." description="Choose your destination, dates and preferences. We’ll send a personalised quote." destinationId={inspiration.id} />
 
@@ -359,8 +259,9 @@ const EnquiryForm = ({ destinationName = '' }) => {
                                     </div>
                                     <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-3">Enquiry Sent!</h2>
                                     <p className="text-slate-600 max-w-md mx-auto mb-8">
-                                        Thanks, {form.name.split(' ')[0] || 'traveller'}! Your enquiry has been submitted through our form. Our team will get back to you shortly.
+                                        Thanks, {form.name.split(' ')[0] || 'traveller'}! Your Google Form response and linked Google Sheet entry are confirmed. Our team will get back to you shortly.
                                     </p>
+                                    <p className="text-xs text-slate-500 mb-4 break-all">Reference: {receipt?.submissionId}. {receipt?.emailSent ? 'Team notification sent.' : 'Team email notification is queued for retry; your enquiry is already recorded.'}</p>
                                     <button onClick={resetForm} className="btn btn-primary px-8 py-3 rounded-xl">
                                         Submit Another Enquiry
                                     </button>
@@ -375,197 +276,209 @@ const EnquiryForm = ({ destinationName = '' }) => {
                                     className="enquiry-form p-5 sm:p-8 md:p-10 space-y-6"
                                     noValidate
                                 >
-                                    <h3 className="flex items-center gap-3 text-base font-bold"><span className="rounded-lg bg-orange-50 px-2.5 py-1.5 text-xs text-primary">01</span> The travelling crew</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div>
-                                            <label htmlFor="enquiry-name" className={labelClasses}>Your Name *</label>
-                                            <Field icon={User}>
-                                                <input
-                                                    id="enquiry-name"
-                                                    autoComplete="name"
-                                                    required
-                                                    className={inputClasses}
-                                                    placeholder="Your Name"
-                                                    value={form.name}
-                                                    onChange={(e) => update('name', e.target.value)}
-                                                />
-                                            </Field>
-                                            {errors.name && <ErrorText text={errors.name} />}
-                                        </div>
-                                        <div>
-                                            <label htmlFor="enquiry-email" className={labelClasses}>Email ID *</label>
-                                            <Field icon={Mail}>
-                                                <input
-                                                    id="enquiry-email"
-                                                    autoComplete="email"
-                                                    required
-                                                    type="email"
-                                                    className={inputClasses}
-                                                    placeholder="your@email.com"
-                                                    value={form.email}
-                                                    onChange={(e) => update('email', e.target.value)}
-                                                />
-                                            </Field>
-                                            {errors.email && <ErrorText text={errors.email} />}
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div>
-                                            <label htmlFor="enquiry-mobile" className={labelClasses}>Mobile No *</label>
-                                            <Field icon={Phone}>
-                                                <input
-                                                    id="enquiry-mobile"
-                                                    autoComplete="tel"
-                                                    required
-                                                    type="tel"
-                                                    className={inputClasses}
-                                                    placeholder="+91 98765 43210"
-                                                    value={form.mobile}
-                                                    onChange={(e) => update('mobile', e.target.value)}
-                                                />
-                                            </Field>
-                                            {errors.mobile && <ErrorText text={errors.mobile} />}
-                                        </div>
-                                        <div>
-                                            <label htmlFor="enquiry-people" className={labelClasses}>No of People *</label>
-                                            <Field icon={Users}>
-                                                <input
-                                                    id="enquiry-people"
-                                                    required
-                                                    type="number"
-                                                    min="1"
-                                                    className={inputClasses}
-                                                    placeholder="e.g. 4"
-                                                    value={form.people}
-                                                    onChange={(e) => update('people', e.target.value)}
-                                                />
-                                            </Field>
-                                            {errors.people && <ErrorText text={errors.people} />}
-                                        </div>
-                                    </div>
-
-                                    <h3 className="flex items-center gap-3 border-t border-slate-100 pt-6 text-base font-bold"><span className="rounded-lg bg-orange-50 px-2.5 py-1.5 text-xs text-primary">02</span> Where and when</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div>
-                                            <label htmlFor="enquiry-destination" className={labelClasses}>Destination on Mind *</label>
-                                            <Field icon={MapPin}>
-                                                <input
-                                                    id="enquiry-destination"
-                                                    required
-                                                    className={inputClasses}
-                                                    placeholder="e.g. Maldives, Manali, Thailand..."
-                                                    value={form.destination}
-                                                    onChange={(e) => update('destination', e.target.value)}
-                                                />
-                                            </Field>
-                                            {errors.destination && <ErrorText text={errors.destination} />}
-                                        </div>
-                                        <div>
-                                            <label htmlFor="enquiry-starting-point" className={labelClasses}>Starting Point Location *</label>
-                                            <Field icon={Navigation}>
-                                                <input
-                                                    id="enquiry-starting-point"
-                                                    required
-                                                    className={inputClasses}
-                                                    placeholder="e.g. Chennai"
-                                                    value={form.startingPoint}
-                                                    onChange={(e) => update('startingPoint', e.target.value)}
-                                                />
-                                            </Field>
-                                            {errors.startingPoint && <ErrorText text={errors.startingPoint} />}
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div>
-                                            <label htmlFor="enquiry-start-date" className={labelClasses}>Trip Start Date *</label>
-                                            <Field icon={Calendar}>
-                                                <input
-                                                    id="enquiry-start-date"
-                                                    required
-                                                    type="date"
-                                                    min={minStart}
-                                                    className={inputClasses}
-                                                    value={form.tripStart}
-                                                    onChange={(e) => update('tripStart', e.target.value)}
-                                                />
-                                            </Field>
-                                            {errors.tripStart && <ErrorText text={errors.tripStart} />}
-                                        </div>
-                                        <div>
-                                            <label htmlFor="enquiry-end-date" className={labelClasses}>Trip End Date *</label>
-                                            <Field icon={Calendar}>
-                                                <input
-                                                    id="enquiry-end-date"
-                                                    required
-                                                    type="date"
-                                                    min={form.tripStart && form.tripStart >= minStart ? form.tripStart : minStart}
-                                                    className={inputClasses}
-                                                    value={form.tripEnd}
-                                                    onChange={(e) => update('tripEnd', e.target.value)}
-                                                />
-                                            </Field>
-                                            {errors.tripEnd && <ErrorText text={errors.tripEnd} />}
-                                        </div>
-                                    </div>
-
-                                    <p role="status" data-trip-duration className="text-sm font-bold text-primary">{nights !== null ? `${nights} ${nights === 1 ? 'night' : 'nights'} / ${nights + 1} ${nights === 0 ? 'day' : 'days'}` : 'Select both dates to see your trip duration.'}</p>
-                                    <h3 className="flex items-center gap-3 border-t border-slate-100 pt-6 text-base font-bold"><span className="rounded-lg bg-orange-50 px-2.5 py-1.5 text-xs text-primary">03</span> Travel preferences</h3>
-                                    <fieldset className="enquiry-preference-fieldset">
-                                        <legend className={labelClasses}>Transportation Preferences *</legend>
-                                        <PreferenceGroup name="transport" options={transportOptions} icons={transportIcons} value={form.transport} onChange={(v) => update('transport', v)} />
-                                        <p className="text-xs text-slate-500 mt-3">{manualTransport ? 'Your transport preference is selected.' : 'Suggested for your group: 1–7 car, 8–21 van, 22+ bus. You can choose another option.'}</p>
-                                        {manualTransport && <button type="button" className="min-h-11 text-xs text-primary font-bold underline" onClick={() => { setManualTransport(false); setForm(f => ({ ...f, transport: suggestedTransport(f.people) })); }}>Use automatic suggestion</button>}
-                                    </fieldset>
-
-                                    <fieldset className="enquiry-preference-fieldset">
-                                        <legend className={labelClasses}>Stay Preferences *</legend>
-                                        <PreferenceGroup name="stay" options={stayOptions} icons={stayIcons} value={form.stay} onChange={(v) => update('stay', v)} />
-                                    </fieldset>
-
-                                    <div>
-                                        <label htmlFor="enquiry-referral" className={labelClasses}>Referral code / Referred by (if any)</label>
-                                        <Field icon={Gift}>
-                                            <input
-                                                id="enquiry-referral"
-                                                className={inputClasses}
-                                                placeholder="Optional"
-                                                value={form.referral}
-                                                onChange={(e) => update('referral', e.target.value)}
-                                            />
-                                        </Field>
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="enquiry-message" className={labelClasses}>Anything else you'd like to add?</label>
-                                        <div className="relative">
-                                            <div className="absolute top-3.5 left-4 pointer-events-none text-slate-400">
-                                                <MessageSquare className="w-5 h-5" />
+                                    {storageWarning && <p role="alert" className="text-sm text-red-600">{storageWarning}</p>}
+                                    {pending && <p role="status" className="text-sm text-slate-600">Your pending details are locked to prevent duplicate enquiries. Retry below to confirm the same reference: <span className="break-all font-bold">{pending.id}</span>.</p>}
+                                    <fieldset disabled={status === 'loading' || Boolean(pending)} className="space-y-6 min-w-0 disabled:opacity-70">
+                                        <legend className="sr-only">Enquiry details</legend>
+                                        <h3 className="flex items-center gap-3 text-base font-bold"><span className="rounded-lg bg-orange-50 px-2.5 py-1.5 text-xs text-primary">01</span> The travelling crew</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <div>
+                                                <label htmlFor="enquiry-name" className={labelClasses}>Your Name *</label>
+                                                <Field icon={User}>
+                                                    <input
+                                                        id="enquiry-name"
+                                                        autoComplete="name"
+                                                        required
+                                                        className={inputClasses}
+                                                        placeholder="Your Name"
+                                                        value={form.name}
+                                                        onChange={(e) => update('name', e.target.value)}
+                                                    />
+                                                </Field>
+                                                {errors.name && <ErrorText text={errors.name} />}
                                             </div>
-                                            <textarea
-                                                id="enquiry-message"
-                                                rows={4}
-                                                className={`${inputClasses} pt-3.5 resize-none`}
-                                                placeholder="Special requests, group details, honeymoon, etc."
-                                                value={form.message}
-                                                onChange={(e) => update('message', e.target.value)}
-                                            />
+                                            <div>
+                                                <label htmlFor="enquiry-email" className={labelClasses}>Email ID *</label>
+                                                <Field icon={Mail}>
+                                                    <input
+                                                        id="enquiry-email"
+                                                        autoComplete="email"
+                                                        required
+                                                        type="email"
+                                                        className={inputClasses}
+                                                        placeholder="your@email.com"
+                                                        value={form.email}
+                                                        onChange={(e) => update('email', e.target.value)}
+                                                    />
+                                                </Field>
+                                                {errors.email && <ErrorText text={errors.email} />}
+                                            </div>
                                         </div>
-                                    </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <div>
+                                                <label htmlFor="enquiry-mobile" className={labelClasses}>Mobile No *</label>
+                                                <Field icon={Phone}>
+                                                    <input
+                                                        id="enquiry-mobile"
+                                                        autoComplete="tel"
+                                                        required
+                                                        type="tel"
+                                                        className={inputClasses}
+                                                        placeholder="+91 98765 43210"
+                                                        value={form.mobile}
+                                                        onChange={(e) => update('mobile', e.target.value)}
+                                                    />
+                                                </Field>
+                                                {errors.mobile && <ErrorText text={errors.mobile} />}
+                                            </div>
+                                            <div>
+                                                <label htmlFor="enquiry-people" className={labelClasses}>No of People *</label>
+                                                <Field icon={Users}>
+                                                    <input
+                                                        id="enquiry-people"
+                                                        required
+                                                        type="number"
+                                                        min="1"
+                                                        className={inputClasses}
+                                                        placeholder="e.g. 4"
+                                                        value={form.people}
+                                                        onChange={(e) => update('people', e.target.value)}
+                                                    />
+                                                </Field>
+                                                {errors.people && <ErrorText text={errors.people} />}
+                                            </div>
+                                        </div>
+
+                                        <h3 className="flex items-center gap-3 border-t border-slate-100 pt-6 text-base font-bold"><span className="rounded-lg bg-orange-50 px-2.5 py-1.5 text-xs text-primary">02</span> Where and when</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <div>
+                                                <label htmlFor="enquiry-destination" className={labelClasses}>Destination on Mind *</label>
+                                                <Field icon={MapPin}>
+                                                    <input
+                                                        id="enquiry-destination"
+                                                        required
+                                                        className={inputClasses}
+                                                        placeholder="e.g. Maldives, Manali, Thailand..."
+                                                        value={form.destination}
+                                                        onChange={(e) => update('destination', e.target.value)}
+                                                    />
+                                                </Field>
+                                                {errors.destination && <ErrorText text={errors.destination} />}
+                                            </div>
+                                            <div>
+                                                <label htmlFor="enquiry-starting-point" className={labelClasses}>Starting Point Location *</label>
+                                                <Field icon={Navigation}>
+                                                    <input
+                                                        id="enquiry-starting-point"
+                                                        required
+                                                        className={inputClasses}
+                                                        placeholder="e.g. Chennai"
+                                                        value={form.startingPoint}
+                                                        onChange={(e) => update('startingPoint', e.target.value)}
+                                                    />
+                                                </Field>
+                                                {errors.startingPoint && <ErrorText text={errors.startingPoint} />}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <div>
+                                                <label htmlFor="enquiry-start-date" className={labelClasses}>Trip Start Date *</label>
+                                                <Field icon={Calendar}>
+                                                    <input
+                                                        id="enquiry-start-date"
+                                                        required
+                                                        type="date"
+                                                        min={minStart}
+                                                        className={inputClasses}
+                                                        value={form.tripStart}
+                                                        onChange={(e) => update('tripStart', e.target.value)}
+                                                    />
+                                                </Field>
+                                                {errors.tripStart && <ErrorText text={errors.tripStart} />}
+                                            </div>
+                                            <div>
+                                                <label htmlFor="enquiry-end-date" className={labelClasses}>Trip End Date *</label>
+                                                <Field icon={Calendar}>
+                                                    <input
+                                                        id="enquiry-end-date"
+                                                        required
+                                                        type="date"
+                                                        min={form.tripStart && form.tripStart >= minStart ? form.tripStart : minStart}
+                                                        className={inputClasses}
+                                                        value={form.tripEnd}
+                                                        onChange={(e) => update('tripEnd', e.target.value)}
+                                                    />
+                                                </Field>
+                                                {errors.tripEnd && <ErrorText text={errors.tripEnd} />}
+                                            </div>
+                                        </div>
+
+                                        <p role="status" data-trip-duration className="text-sm font-bold text-primary">{nights !== null ? `${nights} ${nights === 1 ? 'night' : 'nights'} / ${nights + 1} ${nights === 0 ? 'day' : 'days'}` : 'Select both dates to see your trip duration.'}</p>
+                                        <h3 className="flex items-center gap-3 border-t border-slate-100 pt-6 text-base font-bold"><span className="rounded-lg bg-orange-50 px-2.5 py-1.5 text-xs text-primary">03</span> Travel preferences</h3>
+                                        <fieldset className="enquiry-preference-fieldset">
+                                            <legend className={labelClasses}>Transportation Preferences *</legend>
+                                            <PreferenceGroup name="transport" options={transportOptions} icons={transportIcons} value={form.transport} onChange={(v) => update('transport', v)} />
+                                            {errors.transport && <ErrorText text={errors.transport} />}
+                                            <p className="text-xs text-slate-500 mt-3">{manualTransport ? 'Your transport preference is selected.' : 'Suggested for your group: 1–7 car, 8–21 van, 22+ bus. You can choose another option.'}</p>
+                                            {manualTransport && <button type="button" className="min-h-11 text-xs text-primary font-bold underline" onClick={() => { setManualTransport(false); setForm(f => ({ ...f, transport: suggestedTransport(f.people) })); }}>Use automatic suggestion</button>}
+                                        </fieldset>
+
+                                        <fieldset className="enquiry-preference-fieldset">
+                                            <legend className={labelClasses}>Stay Preferences *</legend>
+                                            <PreferenceGroup name="stay" options={stayOptions} icons={stayIcons} value={form.stay} onChange={(v) => update('stay', v)} />
+                                            {errors.stay && <ErrorText text={errors.stay} />}
+                                        </fieldset>
+
+                                        <div>
+                                            <label htmlFor="enquiry-referral" className={labelClasses}>Referral code / Referred by (if any)</label>
+                                            <Field icon={Gift}>
+                                                <input
+                                                    id="enquiry-referral"
+                                                    className={inputClasses}
+                                                    placeholder="Optional"
+                                                    value={form.referral}
+                                                    onChange={(e) => update('referral', e.target.value)}
+                                                />
+                                            </Field>
+                                            {errors.referral && <ErrorText text={errors.referral} />}
+                                        </div>
+
+                                        <div>
+                                            <label htmlFor="enquiry-message" className={labelClasses}>Anything else you'd like to add?</label>
+                                            <div className="relative">
+                                                <div className="absolute top-3.5 left-4 pointer-events-none text-slate-400">
+                                                    <MessageSquare className="w-5 h-5" />
+                                                </div>
+                                                <textarea
+                                                    id="enquiry-message"
+                                                    rows={4}
+                                                    className={`${inputClasses} pt-3.5 resize-none`}
+                                                    placeholder="Special requests, group details, honeymoon, etc."
+                                                    value={form.message}
+                                                    onChange={(e) => update('message', e.target.value)}
+                                                />
+                                            </div>
+                                            {errors.message && <ErrorText text={errors.message} />}
+                                        </div>
+                                    </fieldset>
 
                                     {(status === 'error' || status === 'unconfirmed') && (
                                         <div role="alert" className="flex flex-col gap-3 text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm font-medium">
                                             <div className="flex items-center gap-2">
                                                 <AlertCircle className="w-5 h-5 shrink-0" />
-                                                {status === 'unconfirmed' ? 'We couldn’t confirm the response. Your enquiry may have been sent; please contact us by email before submitting again.' : 'Something went wrong sending your enquiry. Check your connection or contact us by email.'}
+                                                {deliveryMessage || 'This enquiry has not been confirmed. Retry below to check the same submission safely.'}
                                             </div>
+                                            <button type="button" onClick={downloadEnquiry} className="self-start underline font-bold">Download a copy of my enquiry</button>
+                                            <a href={googleFormFallback(form)} target="_blank" rel="noopener noreferrer" className="self-start underline font-bold">Open the original Google Form with my details</a>
+                                            <p className="text-xs">If this enquiry may already have reached Google, retry here before using the original Form to avoid duplicates. Opening a Form or email draft does not submit it.</p>
                                             <button
                                                 type="button"
                                                 onClick={sendViaEmailInstead}
                                                 className="self-start underline underline-offset-2 font-bold text-red-700 hover:text-red-800"
                                             >
-                                                Send via Email instead
+                                                Open Email Draft
                                             </button>
                                         </div>
                                     )}
@@ -583,12 +496,12 @@ const EnquiryForm = ({ destinationName = '' }) => {
                                             </>
                                         ) : (
                                             <>
-                                                Send My Enquiry <Send className="w-5 h-5" />
+                                                {pending ? 'Retry / Check My Enquiry' : 'Send My Enquiry'} <Send className="w-5 h-5" />
                                             </>
                                         )}
                                     </motion.button>
                                     <p className="text-xs text-center text-slate-400">
-                                        We respect your privacy. Your details are only used to plan your trip.
+                                        Your details are only used to plan your trip. A recovery draft is stored on this browser for up to 7 days and removed after confirmed delivery. Avoid entering details on a shared device.
                                     </p>
                                 </motion.form>
                             )}

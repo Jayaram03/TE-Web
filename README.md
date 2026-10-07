@@ -2,7 +2,8 @@
 
 Public travel website built with React, Vite, Tailwind CSS, and Framer Motion.
 Includes destination browsing, trip details, contact information, and a custom enquiry form.
-There is no chatbot, admin dashboard, or server API in this version.
+There is no chatbot or admin dashboard. Enquiry delivery uses a Vercel server API
+and an owner-deployed Google Apps Script receiver.
 
 ## Development
 
@@ -80,18 +81,18 @@ Section navigation indicates the current section, and all enquiry links carry
 the destination. Catalogue prices require a personalised quote; see
 [pricing research](docs/pricing-research.md) for third-party benchmarks and publication criteria.
 
-[src/pages/Enquiry.jsx](src/pages/Enquiry.jsx) posts the original Google Form field IDs to its
-`formResponse` endpoint using a hidden iframe. Accepted responses use that Google Form's
-linked Sheet. No Apps Script environment variable is required.
+[src/pages/Enquiry.jsx](src/pages/Enquiry.jsx) validates before sending and shows success
+only after the server confirms both the original Google Form response and its linked
+Sheet row. Exact pending details and a stable reference survive refresh for safe retries.
+Google keeps a durable delivery ledger and retries failed Form/email work automatically.
 
-Cross-origin iframe restrictions prevent the website from independently inspecting Google's
-confirmation or verifying a Sheet row. Offline failures show an email fallback; response
-timeouts are shown as unconfirmed, not successful. Avoid retrying an unconfirmed submission
-without checking first, since it may already be recorded.
-
-If Google Form questions change, verify the `ENTRY` mapping against the public form's
-`FB_PUBLIC_LOAD_DATA_` data. Keep staff manual entries in a separate Sheet tab or submit them
-through the original Form to avoid interfering with raw response data.
+**Owner setup is required before custom-form delivery works.** Follow
+[verified enquiry delivery](docs/enquiry-delivery.md) to deploy
+[google-apps-script/Enquiry.gs](google-apps-script/Enquiry.gs) and configure the server-only
+`ENQUIRY_SCRIPT_URL` / `ENQUIRY_SCRIPT_TOKEN` Vercel variables. Without configuration,
+no false success is shown; the visitor can use the original prefilled Google Form.
+Vite alone does not run the server endpoint. See the setup guide for full-stack local
+development, acceptance checks, privacy/retention and delivery limitations.
 
 ## Footer world horizon
 
